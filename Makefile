@@ -51,7 +51,7 @@ prog-subdirs = auth proc exec term \
 	       rtc
 
 ifeq ($(HAVE_LIBRUMP),yes)
-prog-subdirs += rumpdisk
+prog-subdirs += rumpdisk rumpnet
 endif
 
 ifeq ($(HAVE_SUN_RPC),yes)
