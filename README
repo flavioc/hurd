@@ -1,9 +1,8 @@
 This is the GNU Hurd, <http://www.gnu.org/software/hurd/>.  Welcome.
 
-GNU Hurd runs on 32-bit x86 machines.  A version running on 64-bit x86
-(x86_64) machines is in progress.  Volunteers interested in ports to
-other architectures are sought; please contact us (see below) if you'd
-like to help.
+GNU Hurd runs on 32-bit and 64-bit x86 machines.  Volunteers interested in ports
+to other architectures are sought; please contact us (see below) if you'd like
+to help.
 
 To compile the Hurd, you need a toolchain configured to target i?86-gnu;
 you cannot use a toolchain targeting GNU/Linux.  Also note that you
