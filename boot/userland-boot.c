@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <mach.h>
 #include <mach/machine/vm_param.h> /* For VM_XXX_ADDRESS */
+#include <mach/gnumach.h> /* For task_set_name */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

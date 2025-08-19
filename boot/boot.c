@@ -27,6 +27,7 @@
 #include <mach/message.h>
 #include <mach/mig_errors.h>
 #include <mach/task_notify.h>
+#include <mach/gnumach.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
