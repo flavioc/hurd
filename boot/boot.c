@@ -642,6 +642,9 @@ main (int argc, char **argv, char **envp)
       err = task_create (mach_task_self (), 0, &pseudo_kernel);
       if (err)
         error (1, err, "task_create");
+
+      /* Give it a name so it's easy to spot it from the real kernel.  */
+      task_set_name (pseudo_kernel, "pseudo_kernel");
     }
 
   if (kernel_command_line == 0)

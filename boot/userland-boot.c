@@ -60,6 +60,9 @@ boot_script_task_create (struct cmd *cmd)
       error (0, err, "%s: task_create", cmd->path);
       return BOOT_SCRIPT_MACH_ERROR;
     }
+
+  task_set_name (cmd->task, cmd->path);
+
   err = task_suspend (cmd->task);
   if (err)
     {
