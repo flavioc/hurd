@@ -529,14 +529,7 @@ const char *default_boot_script =
      and its task port saved in ${exec-task} to be passed to the fs
      above, but it is left suspended; the fs will resume the exec task
      once it is ready.  */
-#ifdef __i386__
-  "/lib/ld.so"
-#elif defined(__x86_64__) && defined(__LP64__)
-  "/lib/ld-x86-64.so"
-#else
-#error missing name of ld.so
-#endif
-  " /hurd/exec $(exec-task=task-create)"
+  "/hurd/exec.static $(exec-task=task-create)"
   "\n";
 
 
