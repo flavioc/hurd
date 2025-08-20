@@ -5,6 +5,7 @@
 #include <mach/mach_types.h>
 #if !KERNEL || OSKIT_MACH
 #include <string.h>
+#include <stdio.h>
 #endif
 #include "boot_script.h"
 
@@ -560,6 +561,7 @@ boot_script_exec (void)
 		  if (sym->type == VAL_NONE)
 		    {
 		      error = BOOT_SCRIPT_UNDEF_SYM;
+		      fprintf (stderr, "bootstrap script missing symbol '%s'\n", sym->name);
 		      goto done;
 		    }
 		  arg->type = sym->type;
