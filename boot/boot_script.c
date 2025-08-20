@@ -70,23 +70,23 @@ static int symtab_index = 0;
 
 /* Create a task and suspend it.  */
 static int
-create_task (struct cmd *cmd, int *val)
+create_task (struct cmd *cmd, intptr_t *val)
 {
   int err = boot_script_task_create (cmd);
-  *val = (int) cmd->task;
+  *val = (intptr_t) cmd->task;
   return err;
 }
 
 /* Resume a task.  */
 static int
-resume_task (struct cmd *cmd, int *val)
+resume_task (struct cmd *cmd, intptr_t *val)
 {
   return boot_script_task_resume (cmd);
 }
 
 /* Resume a task when the user hits return.  */
 static int
-prompt_resume_task (struct cmd *cmd, int *val)
+prompt_resume_task (struct cmd *cmd, intptr_t *val)
 {
   return boot_script_prompt_task_resume (cmd);
 }
@@ -176,7 +176,7 @@ add_list (void *ptr, void ***ptr_list, int *alloc, int *index, int incr)
 /* Create an argument with TEXT, value type TYPE, and value VAL.
    Add the argument to the argument list of CMD.  */
 static struct arg *
-add_arg (struct cmd *cmd, const char *text, int textlen, int type, int val)
+add_arg (struct cmd *cmd, const char *text, int textlen, int type, intptr_t val)
 {
   struct arg *arg;
 

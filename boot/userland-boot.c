@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <error.h>
+#include <link.h>
 
 #include "boot_script.h"
 #include "private.h"
@@ -171,7 +172,7 @@ load_image (task_t t,
   union
     {
       struct exec a;
-      Elf32_Ehdr e;
+      ElfW(Ehdr) e;
     } hdr;
   char msg[] = ": cannot open bootstrap file\n";
 
@@ -190,7 +191,7 @@ load_image (task_t t,
   if (hdr.e.e_ident[0] == 0177 && hdr.e.e_ident[1] == 'E' &&
       hdr.e.e_ident[2] == 'L' && hdr.e.e_ident[3] == 'F')
     {
-      Elf32_Phdr phdrs[hdr.e.e_phnum], *ph;
+      ElfW(Phdr) phdrs[hdr.e.e_phnum], *ph;
       lseek (fd, hdr.e.e_phoff, SEEK_SET);
       read (fd, phdrs, sizeof phdrs);
       for (ph = phdrs; ph < &phdrs[sizeof phdrs/sizeof phdrs[0]]; ++ph)
@@ -281,19 +282,19 @@ boot_script_exec_cmd (void *hook,
   write (2, "\r\n", 2);
 
   startpc = load_image (task, path);
-  arg_len = stringlen + (argc + 2) * sizeof (char *) + sizeof (integer_t);
-  arg_len += 5 * sizeof (int);
+  arg_len = stringlen + (argc + 2) * sizeof (char *) + sizeof (intptr_t);
+  arg_len += 5 * sizeof (intptr_t);
   stack_end = VM_MAX_ADDRESS;
   stack_start = VM_MAX_ADDRESS - 16 * 1024 * 1024;
   vm_allocate (task, &stack_start, stack_end - stack_start, FALSE);
-  arg_pos = (void *) ((stack_end - arg_len) & ~(sizeof (natural_t) - 1));
+  arg_pos = (void *) ((stack_end - arg_len) & ~(sizeof (intptr_t) - 1));
   args = mmap (0, stack_end - trunc_page ((vm_offset_t) arg_pos),
 	       PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
   str_start = ((vm_address_t) arg_pos
-	       + (argc + 2) * sizeof (char *) + sizeof (integer_t));
+	       + (argc + 2) * sizeof (char *) + sizeof (intptr_t));
   p = args + ((vm_address_t) arg_pos & (vm_page_size - 1));
-  *(int *) p = argc;
-  p = (void *) p + sizeof (int);
+  *(intptr_t *) p = argc;
+  p = (void *) p + sizeof (intptr_t);
   for (i = 0; i < argc; i++)
     {
       *(char **) p = argv[i] - strings + (char *) str_start;
