@@ -1179,6 +1179,11 @@ add_tasks (task_t task)
       mach_msg_type_number_t ntasks;
       int j;
 
+      /* The kernel can deliver us an array with null slots in the
+	 middle, e.g. if a pset was dropped during the call.  */
+      if (! MACH_PORT_VALID (psets[i]))
+	continue;
+
       if (!foundp)
 	{
 	  host_processor_set_priv (_hurd_host_priv, psets[i], &psetpriv);
