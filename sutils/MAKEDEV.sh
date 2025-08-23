@@ -149,9 +149,9 @@ mkdev() {
 	st $I root 666 c /hurd/magic tty;;
       fd)
 	st $I root 666 d /hurd/magic --directory fd
-	cmd ln -f -s fd/0 stdin
-	cmd ln -f -s fd/1 stdout
-	cmd ln -f -s fd/2 stderr
+	cmd ln -f -s -T fd/0 stdin
+	cmd ln -f -s -T fd/1 stdout
+	cmd ln -f -s -T fd/2 stderr
 	;;
       'time')
 	st $I root 644 c /hurd/storeio --no-cache time ;;
