@@ -271,16 +271,29 @@ store_file_create (file_t file, int flags, struct store **store)
   struct store_run run;
   struct stat stat;
   error_t err = io_stat (file, &stat);
+  size_t block_size;
+  size_t sector_size = 512;
 
   if (err)
     return err;
 
   run.start = 0;
-  run.length = stat.st_size;
+
+  /* Try to use a sector as block size.  */
+  if ((stat.st_size % sector_size) == 0)
+    {
+      block_size = sector_size;
+      run.length = stat.st_size / sector_size;
+    }
+  else
+    {
+      block_size = 1;
+      run.length = stat.st_size;
+    }
 
   flags |= STORE_ENFORCED;	/* 'cause it's the whole file.  */
 
-  return _store_file_create (file, flags, 1, &run, 1, store);
+  return _store_file_create (file, flags, block_size, &run, 1, store);
 }
 
 /* Like store_file_create, but doesn't query the file for information.  */
