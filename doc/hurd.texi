@@ -1551,6 +1551,14 @@ references to @var{buf}.  The only permissible error returns are
 @code{EIO}, @code{EDQUOT}, and @code{ENOSPC}.
 @end deftypefun
 
+@deftypefun error_t pager_write_pages (@w{struct user_pager_info *@var{pager}}, @w{vm_offset_t @var{offset}}, @w{vm_address_t @var{data}}, @w{vm_size_t @var{length}}, @w{vm_size_t *@var{written}})
+The user may define this function.  For pager @var{pager}, synchronously write
+potentially multiple pages from @var{data} to offset @var{offset}.  Do not
+deallocate @var{data}, and do not keep any references to @var{data}.  The only
+permissible error returns are @code{EIO}, @code{EDQUOT}, @code{EOPNOTSUPP}, and
+@code{ENOSPC}.
+@end deftypefun
+
 @deftypefun error_t pager_unlock_page (@w{struct user_pager_info *@var{pager}}, @w{vm_offset_t @var{address}})
 A page should be made writable.
 @end deftypefun

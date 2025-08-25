@@ -203,6 +203,16 @@ pager_write_page (struct user_pager_info *pager,
 		  vm_offset_t page,
 		  vm_address_t buf);
 
+/* The user may define this function.  For pager PAGER, synchronously
+   write potentially multiple pages from DATA to offset.
+   Do not deallocate DATA, and do not keep any references to DATA.
+   The only permissible error returns are EIO, EDQUOT, EOPNOTSUPP, and ENOSPC. */
+error_t pager_write_pages(struct user_pager_info *upi,
+                          vm_offset_t offset,
+                          vm_address_t data,
+                          vm_size_t length,
+                          vm_size_t *written);
+
 /* The user must define this function.  A page should be made writable. */
 error_t
 pager_unlock_page (struct user_pager_info *pager,

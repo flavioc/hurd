@@ -83,6 +83,10 @@ do { pthread_spin_lock (&ext2s_pager_stats.lock);			      \
 #define STAT_INC(field) /* nop */0
 #endif /* STATS */
 
+#ifndef EXT2_BULK_MAX_BLOCKS
+#define EXT2_BULK_MAX_BLOCKS 128
+#endif  /* EXT2_BULK_MAX_BLOCKS */
+
 static void
 disk_cache_info_free_push (struct disk_cache_info *p);
 
@@ -378,6 +382,149 @@ pending_blocks_add (struct pending_blocks *pb, block_t block)
   pb->num++;
   return 0;
 }
+
+/* Bulk write across [offset, offset + length).  We coalesce strictly
+   consecutive blocks into a single device write.  The run ends on the
+   first non-consecutive block or when we hit the configured cap.
+   We report partial progress via *written (page-aligned).  */
+static error_t
+file_pager_write_pages (struct node *node,
+			vm_offset_t offset,
+			vm_address_t buf,
+			vm_size_t length,
+			vm_size_t *written)
+{
+  error_t err = 0;
+  vm_size_t done = 0;		/* bytes successfully issued to the store */
+  pthread_rwlock_t *lock = &diskfs_node_disknode (node)->alloc_lock;
+  const unsigned max_blocks = EXT2_BULK_MAX_BLOCKS;
+
+  /* Persisted lookahead block across runs: if non-zero, it is the first
+     block of the next coalesced run and we won't re-find it.  */
+  block_t blk_peek = 0;
+
+  if (written)
+    *written = 0;
+
+  while (done < length)
+    {
+      pthread_rwlock_rdlock (lock);
+
+      /* Recompute clipping against allocsize each iteration.  */
+      vm_size_t left = length - done;
+      if (offset + done >= node->allocsize)
+	{
+	  pthread_rwlock_unlock (lock);
+	  break;
+	}
+      if (offset + done + left > node->allocsize)
+	left = node->allocsize - (offset + done);
+      if (left == 0)
+	{
+	  pthread_rwlock_unlock (lock);
+	  break;
+	}
+
+      /* Build one run of strictly consecutive on-disk blocks.  */
+      struct pending_blocks pb;
+      vm_size_t built = 0;
+      vm_size_t blocks_built = 0;
+      block_t prev = 0;
+      block_t blk = 0;
+
+      pending_blocks_init (&pb, (void *) (buf + done));
+
+      while (blocks_built < max_blocks && built < left)
+	{
+	  /* Use peeked block if we have one; otherwise look it up.  */
+	  if (blk_peek)
+	    {
+	      blk = blk_peek;
+	    }
+	  else
+	    {
+	      error_t ferr =
+		find_block (node, offset + done + built, &blk, &lock);
+	      if (ferr)
+		{
+		  err = ferr;
+		  break;
+		}
+	    }
+
+	  assert_backtrace (blk);
+
+	  if (prev != 0 && blk != prev + 1)
+	    {
+	      /* Non-consecutive: keep BLK for the next outer run.  */
+	      blk_peek = blk;
+	      break;
+	    }
+
+	  /* Extend the run by one block.  We are consuming BLK now.  */
+	  error_t ferr = pending_blocks_add (&pb, blk);
+	  if (ferr)
+	    {
+	      err = ferr;
+	      break;
+	    }
+
+	  prev = blk;
+	  built += block_size;
+	  blocks_built++;
+
+	  /* We consumed the peeked block; clear it so we fetch the next.  */
+	  blk_peek = 0;
+	}
+
+      /* Flush exactly one coalesced run; even if the loop broke early,
+         we may have a valid prefix to push.  */
+      error_t werr = pending_blocks_write (&pb);
+      if (!err)
+	err = werr;
+
+      pthread_rwlock_unlock (lock);
+
+      /* Advance only by what we actually enumerated and flushed.  */
+      done += built;
+
+      /* Stop on error. */
+      if (err)
+	break;
+    }
+
+  /* We must not be "holding" a peeked block on return unless we stopped
+     due to an error. */
+  assert_backtrace (blk_peek == 0 || err);
+
+  if (written)
+    {
+      vm_size_t w = done;
+      if (w > length)
+	w = length;
+      /* libpager expects progress aligned to whole pages.  */
+      w -= (w % vm_page_size);
+      *written = w;
+    }
+
+  return err;
+}
+
+/* Strong override: only FILE_DATA uses bulk; others keep per-page path.  */
+error_t
+pager_write_pages (struct user_pager_info *pager,
+                   vm_offset_t offset,
+                   vm_address_t data,
+                   vm_size_t length,
+                   vm_size_t *written)
+{
+  /* libpager will just hand this off to the pager_write_page. */
+  if (pager->type != FILE_DATA)
+    return EOPNOTSUPP;
+
+  return file_pager_write_pages (pager->node, offset, data, length, written);
+}
+
 
 /* Write one page for the pager backing NODE, at OFFSET, into BUF.  This
    may need to write several filesystem blocks to satisfy one page, and tries
