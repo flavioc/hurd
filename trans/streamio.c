@@ -1049,9 +1049,11 @@ device_read_reply_inband (mach_port_t reply, kern_return_t errorcode,
 
   input_pending = 0;
   err = errorcode;
+  if (err == D_WOULD_BLOCK)
+    err = 0;
   if (!err)
     {
-      if (datalen == 0)
+      if (datalen == 0 && errorcode != D_WOULD_BLOCK)
 	{
 	  eof = 1;
 	  dev_close ();
