@@ -27,6 +27,7 @@
 
 #include <mach.h>
 #include <mach/gnumach.h>
+#include <mach/port.h>
 #include <hurd.h>
 #include <hurd/ports.h>
 #include <device/device.h>
@@ -328,6 +329,27 @@ rumpdisk_device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_ty
       pthread_rwlock_unlock (&rumpdisk_rwlock);
       return err;
     }
+
+#ifdef HAVE_MACH_PORT_SET_KTYPE
+  /* Configure the receive port as a USER_DEVICE so that IPC messages
+     destined for rumpdisk will use page lists rather than page map
+     entries. This strategy prevents pages that are referenced in the
+     message body from being swapped out until the message has been
+     processed.
+  */
+  err = mach_port_set_ktype (master_host,
+			     mach_task_self (),
+			     bd->port.port_right,
+			     MACH_PORT_RIGHT_RECEIVE,
+			     MACH_PORT_KTYPE_USER_DEVICE);
+  if (err != 0)
+    {
+      fprintf (stderr,
+	       "Warning: mach_port_set_ktype failed, swapping will be unreliable: %s\n",
+	       strerror (err));
+      fflush (stderr);
+    }
+#endif
 
   bd->taken = 1;
   snprintf (bd->name, DISK_NAME_LEN, "%s", name);
