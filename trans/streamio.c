@@ -572,9 +572,9 @@ io_select_common (struct trivfs_protid *cred,
 
   available = 0;
 
+  pthread_mutex_lock (&global_lock);
   while (1)
     {
-      pthread_mutex_lock (&global_lock);
       if ((*type & SELECT_READ) && buffer_readable (input_buffer))
 	available |= SELECT_READ;
       if ((*type & SELECT_WRITE) &&
