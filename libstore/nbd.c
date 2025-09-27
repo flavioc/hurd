@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <assert-backtrace.h>
 
 
 // Avoid dragging in the resolver when linking statically.
@@ -519,7 +520,10 @@ store_nbd_open (const char *name, int flags, struct store **store)
 	  if (!strncmp (name, url_prefix, sizeof url_prefix - 1))
 	    err = store_set_name (*store, name);
 	  else
-	    asprintf (&(*store)->name, "%s%s", url_prefix, name);
+	    {
+	      int err2 = asprintf (&(*store)->name, "%s%s", url_prefix, name);
+	      assert_backtrace (err2 != -1);
+	    }
 	  if (err)
 	    store_free (*store);
 	}

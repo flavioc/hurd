@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <assert-backtrace.h>
 
 /* You can't do anything with an unknown store but encode it.  */
 
@@ -127,11 +128,13 @@ store_unknown_decode (struct store_enc *enc,
   /* Derive a name for this unknown store from its encoded type field
      (or lack thereof) and the leading string of its encoded data bytes.  */
   if (enc->cur_int == enc->num_ints)
-    asprintf (&(*store)->name, "notype:%.*s",
+    err = asprintf (&(*store)->name, "notype:%.*s",
 	      (int) (us->data_len - us->cur_data), us->data + us->cur_data);
   else
-    asprintf (&(*store)->name, "type-%d:%.*s", enc->ints[enc->cur_int],
+    err = asprintf (&(*store)->name, "type-%d:%.*s", enc->ints[enc->cur_int],
 	     (int) ( us->data_len - us->cur_data), us->data + us->cur_data);
+
+  assert_backtrace (err != -1);
 
   return 0;
 }
