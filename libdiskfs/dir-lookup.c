@@ -23,6 +23,7 @@
 #include <hurd/fshelp.h>
 #include <hurd/fsys.h>
 #include <hurd/paths.h>
+#include <assert-backtrace.h>
 
 #include "priv.h"
 #include "fs_S.h"
@@ -309,9 +310,15 @@ diskfs_S_dir_lookup (struct protid *dircred,
 		    /* dircred is the root directory.  */
 		    complete_path = translator_path;
 		  else
-		    asprintf (&complete_path, "%s/%s", dircred->po->path,
-			      translator_path);
-
+		    {
+		      err = asprintf (&complete_path, "%s/%s", dircred->po->path,
+		                      translator_path);
+		      if (err == -1)
+			{
+			  err = errno;
+			  goto out;
+			}
+		    }
                   notify_port = newpi->pi.bucket->notify_port;
 		  err = fshelp_set_active_translator (notify_port,
 						      complete_path,
@@ -534,7 +541,10 @@ diskfs_S_dir_lookup (struct protid *dircred,
       else
 	{
 	  newpi->po->path = NULL;
-	  asprintf (&newpi->po->path, "%s/%s", dircred->po->path, relpath);
+	  int err2 = asprintf (&newpi->po->path, "%s/%s", dircred->po->path, relpath);
+	  /* If asprintf fails set path to NULL so that the if below checks errno. */
+	  if (err2 == -1)
+	    newpi->po->path = NULL;
 	}
 
       if (! newpi->po->path)

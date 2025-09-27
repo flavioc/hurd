@@ -27,6 +27,7 @@
 #include <hurd/fsys.h>
 #include <hurd/paths.h>
 #include <hurd/startup.h>
+#include <assert-backtrace.h>
 
 #include "startup_S.h"
 
@@ -230,8 +231,9 @@ _diskfs_init_completed (void)
 
   notify = ports_get_send_right (pi);
   ports_port_deref (pi);
-  asprintf (&name,
-	    "%s %s", program_invocation_short_name, diskfs_disk_name ?: "-");
+  err = asprintf (&name,
+	          "%s %s", program_invocation_short_name, diskfs_disk_name ?: "-");
+  assert_backtrace (err != -1);
   err = startup_request_notification (init, notify,
 				      MACH_MSG_TYPE_COPY_SEND, name);
   mach_port_deallocate (mach_task_self (), notify);
