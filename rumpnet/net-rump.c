@@ -328,7 +328,7 @@ search_interface(const char *ifname)
 {
   struct ifreq ifr;
   struct ifreq *dev = NULL;
-  char *last_slash, *name;
+  const char *last_slash, *name;
 
   memset(&ifr, 0, sizeof(ifr));
   last_slash = strrchr(ifname, '/');
