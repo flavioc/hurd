@@ -337,11 +337,13 @@ verify_id (uid_t id, int is_group, int multiple,
   if (multiple)
     {
       if (name)
-	asprintf (&prompt, "Password for %s%s:",
+	err = asprintf (&prompt, "Password for %s%s:",
 		  is_group ? "group " : "", name);
       else
-	asprintf (&prompt, "Password for %s %d:",
+	err = asprintf (&prompt, "Password for %s %d:",
 		  is_group ? "group" : "user", id);
+
+      assert_backtrace (err != -1);
     }
 
   /* Prompt the user for the password.  */
