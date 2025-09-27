@@ -109,11 +109,18 @@ msgid_info (mach_msg_id_t msgid)
 	  struct msgid_info *reply_info = malloc (sizeof *info);
 	  if (reply_info != 0)
 	    {
+	      int err;
 	      reply_info->subsystem = strdup (info->subsystem);
 	      reply_info->name = 0;
-	      asprintf (&reply_info->name, "%s-reply", info->name);
-	      hurd_ihash_add (&msgid_ihash, msgid, reply_info);
-	      info = reply_info;
+	      err = asprintf (&reply_info->name, "%s-reply", info->name);
+	      if (err == -1)
+		/* asprintf may fail with ENOMEM, react the same way to malloc failing */
+		info = 0;
+	      else
+		{
+		  hurd_ihash_add (&msgid_ihash, msgid, reply_info);
+		  info = reply_info;
+		}
 	    }
 	  else
 	    info = 0;
