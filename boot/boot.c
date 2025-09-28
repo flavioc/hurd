@@ -154,11 +154,6 @@ char *bootdevice = 0;
 char *bootscript = 0;
 
 
-void safe_gets (char *buf, int buf_len)
-{
-  fgets (buf, buf_len, stdin);
-}
-
 extern char *useropen_dir;
 
 /* XXX: glibc should provide mig_reply_setup but does not.  */
