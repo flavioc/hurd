@@ -457,11 +457,11 @@ mtab_populate (struct mtab *mtab, const char *path, mach_port_t control,
         if (! MACH_PORT_VALID (controls[i]))
           continue;
 
-	asprintf (&p, "%s%s%s",
-		  path,
-		  path[strlen (path) - 1] == '/'? "": "/",
-		  c);
-	if (! p)
+	err = asprintf (&p, "%s%s%s",
+			path,
+			path[strlen (path) - 1] == '/'? "": "/",
+			c);
+	if (err == -1)
 	  {
 	    err = ENOMEM;
 	    goto errout;
@@ -535,8 +535,8 @@ argz_add_device (char **options, size_t *options_len, const char *device)
 
   /* device specifies a size.  */
   char *arg = NULL;
-  asprintf (&arg, "size=%s", device);
-  if (! arg)
+  err = asprintf (&arg, "size=%s", device);
+  if (err == -1)
     return ENOMEM;
 
   err = argz_add (options, options_len, arg);
@@ -563,6 +563,7 @@ looks_like_block_device (const char *s)
 error_t
 map_device_to_path (const char *device, char **path)
 {
+  int err;
   int part = -1;
   if (strncmp (device, "part:", 5) == 0)
     {
@@ -577,14 +578,20 @@ map_device_to_path (const char *device, char **path)
   if (strncmp (device, "device:", 7) == 0)
     {
       if (part >= 0)
-	asprintf (path, "/dev/%ss%u", &device[7], part);
+	err = asprintf (path, "/dev/%ss%u", &device[7], part);
       else
-	asprintf (path, "/dev/%s", &device[7]);
+	err = asprintf (path, "/dev/%s", &device[7]);
+      if (err == -1)
+	return ENOMEM;
     }
   else if (strncmp (device, "/dev/", 5) == 0)
     *path = strdup (device);
   else if (looks_like_block_device (device))
-    asprintf (path, "/dev/%s", device);
+    {
+      err = asprintf (path, "/dev/%s", device);
+      if (err == -1)
+	return ENOMEM;
+    }
   else
     *path = strdup (device);
 
