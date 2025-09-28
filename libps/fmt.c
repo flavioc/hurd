@@ -339,7 +339,10 @@ ps_fmt_creation_error (char *src, int posix, struct ps_fmt_specs *fmt_specs,
   struct ps_fmt *fmt;
   error_t err = _fmt_create (src, posix, fmt_specs, &fmt, error);
   if (err != EINVAL)		/* ? */
-    asprintf (error, "%s", strerror (err));
+    {
+      int err2 = asprintf (error, "%s", strerror (err));
+      assert_backtrace (err2 != -1);
+    }
   if (! err)
     ps_fmt_free (fmt);
 }
