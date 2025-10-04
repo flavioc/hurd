@@ -356,7 +356,7 @@ netfs_append_args (char **argz, size_t *argz_len)
 	      free (rep);
 	    }
 	  else
-	    err = ENOMEM;
+	    err = errno;
 	}
       else
 	err = argz_add (argz, argz_len, "--debug");
