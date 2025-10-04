@@ -152,7 +152,9 @@ trivfs_append_args (struct trivfs_control *fsys,
     {
       int err2 = asprintf (&opt, "--device-master-port=%u", opt_device_master);
 
-      if (err2 != -1)
+      if (err2 == -1)
+	err = errno;
+      else
 	{
 	  err = argz_add (argz, argz_len, opt);
 	  free (opt);
