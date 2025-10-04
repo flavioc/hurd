@@ -341,9 +341,9 @@ deliver (int msg, char *msg_name, char *rcpt, int flags, struct params *params)
   if (! pw)
     return ERR ("%s: Unknown user", rcpt);
 
-  asprintf (&mbox, "%s/%s", params->mail_dir, rcpt);
-  if (! mbox)
-    return SYSERRX (ENOMEM, "%s", rcpt);
+  int err = asprintf (&mbox, "%s/%s", params->mail_dir, rcpt);
+  if (err == -1)
+    return SYSERRX (errno, "%s", rcpt);
 
   do
     {

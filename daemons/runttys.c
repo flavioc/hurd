@@ -102,8 +102,8 @@ setup_terminal (struct terminal *t, struct ttyent *tt)
 	}
 
       char *line;
-      asprintf (&line, "%s %s", tt->ty_getty, tt->ty_name);
-      if (line == 0)
+      int err = asprintf (&line, "%s %s", tt->ty_getty, tt->ty_name);
+      if (err == -1)
 	{
 	  error (0, ENOMEM,
 		 "cannot allocate arguments for %s", t->name);
@@ -319,8 +319,10 @@ restart_terminal (pid_t pid)
 static void
 shutdown_terminal (struct terminal *t)
 {
+  int err;
   kill (t->pid, SIGHUP);
-  revoke (t->name);
+  err = revoke (t->name);
+  assert_backtrace (err != -1);
 }
 
 /* Re-read /etc/ttys.  If a line has turned off, kill what's there.

@@ -35,6 +35,7 @@
 #include <utmp.h>
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <assert-backtrace.h>
 
 /* XXX: should include directly from libshouldbeinlibc */
 extern char *localhost (void);
@@ -111,18 +112,22 @@ load_banner (void)
 static void
 print_banner (int fd, char *ttyname)
 {
+  ssize_t err;
   char *s, *t, *expansion;
   struct utsname u;
+  size_t len;
 
   if (uname (&u))
     u.sysname[0] = u.release[0] = '\0';
 
-  write (fd, "\r\n", 2);
+  err = write (fd, "\r\n", 2);
+  assert_backtrace (err == 2);
   for (s = load_banner (); *s; s++)
     {
       for (t = s; *t && *t != '\\'; t++) /* nomnomnom */;
 
-      write (fd, s, t - s);
+      err = write (fd, s, t - s);
+      assert_backtrace (err == (t - s));
       if (! *t)
         return;
 
@@ -146,7 +151,9 @@ print_banner (int fd, char *ttyname)
         default:
           expansion = "?";
         }
-      write (fd, expansion, strlen (expansion));
+      len = strlen (expansion);
+      err = write (fd, expansion, len);
+      assert_backtrace (err == len);
 
       s = t + 1;
     }
@@ -155,6 +162,7 @@ print_banner (int fd, char *ttyname)
 int
 main (int argc, char **argv)
 {
+  int err;
   char *linespec, *ttyname;
   int tty;
   struct ttyent *tt;
@@ -174,11 +182,35 @@ main (int argc, char **argv)
   linespec = argv[1];
 
   tt = getttynam (argv[2]);
-  asprintf (&ttyname, "%s/%s", _PATH_DEV, argv[2]);
+  err = asprintf (&ttyname, "%s/%s", _PATH_DEV, argv[2]);
+  if (err == -1)
+    {
+      syslog (LOG_ERR, "asprintf failed %s: %m", argv[2]);
+      closelog ();
+      exit (1);
+    }
 
-  chown (ttyname, 0, 0);
-  chmod (ttyname, 0600);
-  revoke (ttyname);
+  err = chown (ttyname, 0, 0);
+  if (err == -1)
+    {
+      syslog (LOG_ERR, "chown failed %s: %m", ttyname);
+      closelog ();
+      exit (1);
+    }
+  err = chmod (ttyname, 0600);
+  if (err == -1)
+    {
+      syslog (LOG_ERR, "chmod failed %s: %m", ttyname);
+      closelog ();
+      exit (1);
+    }
+  err = revoke (ttyname);
+  if (err == -1)
+    {
+      syslog (LOG_ERR, "revoke failed %s; %m", ttyname);
+      closelog ();
+      exit (1);
+    }
   sleep (2);			/* leave DTR down for a bit */
 
   do
@@ -200,7 +232,13 @@ main (int argc, char **argv)
   if (login_tty (tty) == -1)
     syslog (LOG_ERR, "cannot set controlling terminal to %s: %m", ttyname);
 
-  asprintf (&arg, "TERM=%s", tt ? tt->ty_type : "unknown");
+  err = asprintf (&arg, "TERM=%s", tt ? tt->ty_type : "unknown");
+  if (err == -1)
+    {
+      syslog (LOG_ERR, "asprintf failed %s: %m", ttyname);
+      closelog ();
+      exit (1);
+    }
 
   if (tt && strcmp (tt->ty_type, "dialup") == 0)
     /* Dialup lines time out (which is login's default).  */
