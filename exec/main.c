@@ -150,9 +150,9 @@ trivfs_append_args (struct trivfs_control *fsys,
 
   if (MACH_PORT_VALID (opt_device_master))
     {
-      asprintf (&opt, "--device-master-port=%u", opt_device_master);
+      int err2 = asprintf (&opt, "--device-master-port=%u", opt_device_master);
 
-      if (opt)
+      if (err2 != -1)
 	{
 	  err = argz_add (argz, argz_len, opt);
 	  free (opt);
