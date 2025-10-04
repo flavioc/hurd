@@ -473,7 +473,8 @@ main (void)
       /* Elicit a SIGLOST now if the console (on our stderr, i.e. fd 2) has
 	 died.  That way, the next error message emitted will actually make
 	 it out to the console if it can be made it work at all.  */
-      write (2, "", 0);
+      int err = write (2, "", 0);
+      (void) err;
 
       /* If a SIGTERM or SIGHUP arrived recently, it set a flag
 	 and broke us out of being blocked in waitpid.  */
