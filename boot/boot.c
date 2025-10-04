@@ -457,17 +457,20 @@ read_boot_script (char **buffer, size_t *length)
   static const char memmsg[] = "Not enough memory\n";
   int i, fd;
   size_t amt, len;
+  ssize_t err;
 
   fd = open (bootscript, O_RDONLY, 0);
   if (fd < 0)
     {
-      write (2, filemsg, sizeof (filemsg));
+      err = write (2, filemsg, sizeof (filemsg));
+      assert_backtrace (err == (sizeof (filemsg)));
       host_exit (1);
     }
   p = buf = malloc (500);
   if (!buf)
     {
-      write (2, memmsg, sizeof (memmsg));
+      err = write (2, memmsg, sizeof (memmsg));
+      assert_backtrace (err == (sizeof (memmsg)));
       host_exit (1);
     }
   len = 500;
@@ -487,7 +490,8 @@ read_boot_script (char **buffer, size_t *length)
           newbuf = realloc (buf, newlen);
           if (!newbuf)
             {
-              write (2, memmsg, sizeof (memmsg));
+              err = write (2, memmsg, sizeof (memmsg));
+              assert_backtrace (err == (sizeof (memmsg)));
               host_exit (1);
             }
           p = newbuf + len;
@@ -637,8 +641,11 @@ main (int argc, char **argv, char **envp)
     }
 
   if (kernel_command_line == 0)
-    asprintf (&kernel_command_line, "%s %s root=%s",
-	      argv[0], bootstrap_args, bootdevice);
+    {
+      int err2 = asprintf (&kernel_command_line, "%s %s root=%s",
+		argv[0], bootstrap_args, bootdevice);
+      assert_backtrace (err2 != -1);
+    }
 
   /* Initialize boot script variables.  */
   if (boot_script_set_variable ("host-port", VAL_PORT,
@@ -657,8 +664,9 @@ main (int argc, char **argv, char **envp)
 				   VAL_STR, (intptr_t) bootstrap_args))
     {
       static const char msg[] = "error setting variable";
-
-      write (2, msg, strlen (msg));
+      size_t len = strlen (msg);
+      ssize_t err2 = write (2, msg, len);
+      assert_backtrace (err2 == len);
       host_exit (1);
     }
 
@@ -679,10 +687,12 @@ main (int argc, char **argv, char **envp)
        if (err)
          {
            char *msg;
-           asprintf (&msg, "cannot set boot-script variable %s: %s\n",
-                     word, boot_script_error_string (err));
-           assert_backtrace (msg);
-           write (2, msg, strlen (msg));
+           ssize_t err2 = asprintf (&msg, "cannot set boot-script variable %s: %s\n",
+				    word, boot_script_error_string (err));
+           assert_backtrace (err2 != -1);
+           len = strlen (msg);
+           err2 = write (2, msg, len);
+           assert_backtrace (err2 == len);
            free (msg);
            host_exit (1);
          }
@@ -707,15 +717,21 @@ main (int argc, char **argv, char **envp)
 	err = boot_script_parse_line (0, line);
 	if (err)
 	  {
+	    ssize_t err2;
 	    char *str;
 	    int i;
 
 	    str = boot_script_error_string (err);
 	    i = strlen (str);
-	    write (2, str, i);
-	    write (2, " in `", 5);
-	    write (2, line, strlen (line));
-	    write (2, "'\n", 2);
+	    err2 = write (2, str, i);
+	    assert_backtrace (err2 == i);
+	    err2 = write (2, " in `", 5);
+	    assert_backtrace (err2 == 5);
+	    i = strlen (line);
+	    err2 = write (2, line, i);
+	    assert_backtrace (err2 == i);
+	    err2 = write (2, "'\n", 2);
+	    assert_backtrace (err2 == 2);
 	    host_exit (1);
 	  }
 	if (p == buf + amt)
@@ -727,9 +743,13 @@ main (int argc, char **argv, char **envp)
   if (index (bootstrap_args, 'd'))
     {
       static const char msg[] = "Pausing. . .";
+      size_t msg_len = sizeof (msg) - 1;
       char c;
-      write (2, msg, sizeof (msg) - 1);
-      read (0, &c, 1);
+      ssize_t err2;
+      err2 = write (2, msg, msg_len);
+      assert_backtrace (err2 == msg_len);
+      err2 = read (0, &c, 1);
+      assert_backtrace (err2 == 1);
     }
 
   init_termstate ();
@@ -740,11 +760,14 @@ main (int argc, char **argv, char **envp)
     err = boot_script_exec ();
     if (err)
       {
+	ssize_t err2;
 	char *str = boot_script_error_string (err);
 	int i = strlen (str);
 
-	write (2, str, i);
-	write (2, "\n",  1);
+	err2 = write (2, str, i);
+	assert_backtrace (err2 == i);
+	err2 = write (2, "\n",  1);
+	assert_backtrace (err2 == 1);
 	host_exit (1);
       }
     free (buf);
@@ -1340,6 +1363,7 @@ kern_return_t
 do_mach_notify_no_senders (mach_port_t notify,
 			   mach_port_mscount_t mscount)
 {
+  ssize_t err;
   static int no_console;
   mach_port_t foo;
   if (notify == pseudo_master_device_port)
@@ -1356,7 +1380,8 @@ do_mach_notify_no_senders (mach_port_t notify,
 	{
 	bye:
 	  restore_termstate ();
-	  write (2, "bye\n", 4);
+	  err = write (2, "bye\n", 4);
+	  assert_backtrace (err == 4);
 	  host_exit (0);
 	}
       else
