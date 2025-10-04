@@ -92,11 +92,8 @@ key_enable (void *handle)
 error_t
 xkb_generate_event (keycode_t kc)
 {
-  static keycode_t prevkc = 0;
-
   keycode_t keycode = kc & 127;
   process_keypress_event (keycode);
-  prevkc = keycode;
   return 0;
 }
 
