@@ -140,7 +140,8 @@ cat (mach_port_t node, char *str)
 	  break;
 	else
 	  {
-	    write (0, data, data_len);
+	    ssize_t err2 = write (0, data, data_len);
+	    assert_backtrace (err2 == data_len);
 	    if (data != buf)
 	      munmap (data, data_len);
 	  }
@@ -334,6 +335,7 @@ dog (time_t timeout, pid_t pid, char **argv)
 {
   if (fork () == 0)
     {
+      int err;
       char buf[25];		/* Be gratuitously pretty.  */
       char *name = basename (argv[0]);
       time_t left = timeout;
@@ -348,8 +350,9 @@ dog (time_t timeout, pid_t pid, char **argv)
 
 	  /* Frob ARGV so that ps show something nice.  */
 	  fmt_named_interval (&tv, 0, buf, sizeof buf);
-	  asprintf (&argv[0], "(watchdog for %s %d: %s remaining)",
-		    name, pid, buf);
+	  err = asprintf (&argv[0], "(watchdog for %s %d: %s remaining)",
+			  name, pid, buf);
+	  assert_backtrace (err != -1);
 	  argv[1] = 0;
 
 	  sleep (interval);
