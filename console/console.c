@@ -235,7 +235,13 @@ vcons_lookup (cons_t cons, int id, int create, vcons_t *r_vcons)
   vcons->cons = cons;
   vcons->refcnt = 1;
   vcons->id = id;
-  asprintf (&vcons->name, "%i", id);
+  err = asprintf (&vcons->name, "%i", id);
+  if (err == -1)
+    {
+      free (vcons);
+      pthread_mutex_unlock (&cons->lock);
+      return ENOMEM;
+    }
   /* XXX Error checking.  */
 
   pthread_mutex_init (&vcons->lock, NULL);
