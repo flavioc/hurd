@@ -115,7 +115,7 @@ main (int argc, char **argv)
 	  setsid ();
 	  err = chdir ("/");
 	  if (err == -1)
-	    error (3, 0, "chdir call failed");
+	    error (3, errno, "chdir call failed");
 	  close (0);
 	  close (1);
 	  close (2);
