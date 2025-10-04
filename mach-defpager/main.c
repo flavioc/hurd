@@ -113,7 +113,9 @@ main (int argc, char **argv)
 	  error (1, errno, "cannot become daemon");
 	case 0:
 	  setsid ();
-	  chdir ("/");
+	  err = chdir ("/");
+	  if (err == -1)
+	    error (3, 0, "chdir call failed");
 	  close (0);
 	  close (1);
 	  close (2);
