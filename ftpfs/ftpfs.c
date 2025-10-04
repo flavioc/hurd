@@ -349,9 +349,14 @@ netfs_append_args (char **argz, size_t *argz_len)
       if (debug_stream != stderr)
 	{
 	  char *rep;
-	  asprintf (&rep, "--debug=%s", debug_stream_name);
-	  err = argz_add (argz, argz_len, rep);
-	  free (rep);
+	  err = asprintf (&rep, "--debug=%s", debug_stream_name);
+	  if (err != -1)
+	    {
+	      err = argz_add (argz, argz_len, rep);
+	      free (rep);
+	    }
+	  else
+	    err = ENOMEM;
 	}
       else
 	err = argz_add (argz, argz_len, "--debug");
