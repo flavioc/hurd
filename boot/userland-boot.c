@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <error.h>
 #include <link.h>
+#include <assert-backtrace.h>
 
 #include "boot_script.h"
 #include "private.h"
@@ -94,10 +95,12 @@ boot_script_task_resume (struct cmd *cmd)
 int
 boot_script_prompt_task_resume (struct cmd *cmd)
 {
-  char xx[5];
+  int c;
 
   printf ("Hit return to resume %s...", cmd->path);
-  fgets (xx, sizeof xx, stdin);
+  do {
+    c = fgetc (stdin);
+  } while (c != EOF && c != '\n');
 
   return boot_script_task_resume (cmd);
 }
@@ -168,6 +171,7 @@ static vm_address_t
 load_image (task_t t,
 	    char *file)
 {
+  ssize_t err;
   int fd;
   union
     {
@@ -180,20 +184,25 @@ load_image (task_t t,
 
   if (fd == -1)
     {
-      write (2, file, strlen (file));
-      write (2, msg, sizeof msg - 1);
+      size_t len = strlen (file);
+      err = write (2, file, len);
+      assert_backtrace (err == len);
+      err = write (2, msg, sizeof msg - 1);
+      assert_backtrace (err == (sizeof msg - 1));
       task_terminate (t);
       exit (1);
     }
 
-  read (fd, &hdr, sizeof hdr);
+  err = read (fd, &hdr, sizeof hdr);
+  assert_backtrace (err == (sizeof hdr));
   /* File must have magic ELF number.  */
   if (hdr.e.e_ident[0] == 0177 && hdr.e.e_ident[1] == 'E' &&
       hdr.e.e_ident[2] == 'L' && hdr.e.e_ident[3] == 'F')
     {
       ElfW(Phdr) phdrs[hdr.e.e_phnum], *ph;
       lseek (fd, hdr.e.e_phoff, SEEK_SET);
-      read (fd, phdrs, sizeof phdrs);
+      err = read (fd, phdrs, sizeof phdrs);
+      assert_backtrace (err == (sizeof phdrs));
       for (ph = phdrs; ph < &phdrs[sizeof phdrs/sizeof phdrs[0]]; ++ph)
 	if (ph->p_type == PT_LOAD)
 	  {
@@ -205,7 +214,8 @@ load_image (task_t t,
 				       PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
 
 	    lseek (fd, ph->p_offset, SEEK_SET);
-	    read (fd, (void *)(buf + offs), ph->p_filesz);
+	    err = read (fd, (void *)(buf + offs), ph->p_filesz);
+	    assert_backtrace (err == (ph->p_filesz));
 
 	    ph->p_memsz = ((ph->p_vaddr + ph->p_memsz + ph->p_align - 1)
 			   & ~(ph->p_align - 1));
@@ -238,7 +248,8 @@ load_image (task_t t,
       rndamount = round_page (amount);
       buf = mmap (0, rndamount, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
       lseek (fd, sizeof hdr.a - headercruft, SEEK_SET);
-      read (fd, buf, amount);
+      err = read (fd, buf, amount);
+      assert_backtrace (err == amount);
       vm_allocate (t, &base, rndamount, 0);
       vm_write (t, base, (vm_address_t) buf, rndamount);
       if (magic != OMAGIC)
@@ -267,19 +278,33 @@ boot_script_exec_cmd (void *hook,
   vm_offset_t stack_start, stack_end;
   vm_address_t startpc, str_start;
   thread_t thread;
+  ssize_t err;
+  size_t len;
 
-  write (2, path, strlen (path));
+  len = strlen (path);
+  err = write (2, path, len);
+  assert_backtrace (err == len);
   for (i = 1; i < argc; ++i)
     {
       int quote = !! index (argv[i], ' ') || !! index (argv[i], '\t');
-      write (2, " ", 1);
+      err = write (2, " ", 1);
+      assert_backtrace (err == 1);
       if (quote)
-        write (2, "\"", 1);
-      write (2, argv[i], strlen (argv[i]));
+	{
+	  err = write (2, "\"", 1);
+	  assert_backtrace (err == 1);
+	}
+      len = strlen (argv[i]);
+      err = write (2, argv[i], len);
+      assert_backtrace (err == len);
       if (quote)
-        write (2, "\"", 1);
+	{
+	  err = write (2, "\"", 1);
+	  assert_backtrace (err == 1);
+	}
     }
-  write (2, "\r\n", 2);
+  err = write (2, "\r\n", 2);
+  assert_backtrace (err == 2);
 
   startpc = load_image (task, path);
   arg_len = stringlen + (argc + 2) * sizeof (char *) + sizeof (intptr_t);
