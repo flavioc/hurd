@@ -46,7 +46,6 @@ static struct argp_child common_child_argps[] =
   { 0 }
 };
 
-static const char common_args_doc[] = "USER...";
 static const char common_doc[] =
   "\vBy default, all processes in the current login collection are selected";
 
