@@ -38,7 +38,7 @@
 void *
 server_loop (void *arg)
 {
-  int fd = (int) arg;
+  int fd = (intptr_t) arg;
   char buf[MAXIOSIZE];
   int xid;
   int *p, *r;
