@@ -86,21 +86,30 @@ sigchld_handler(int signal)
 	  /* The big magilla bit the dust.  */
 	  child_pid = -1;
 
+	  error_t err;
 	  char *desc = NULL;
 	  if (WIFSIGNALED (status))
-	    asprintf (&desc, "terminated abnormally (%s)",
-		      strsignal (WTERMSIG (status)));
+	    err = asprintf (&desc, "terminated abnormally (%s)",
+			    strsignal (WTERMSIG (status)));
 	  else if (WIFSTOPPED (status))
-	    asprintf (&desc, "stopped abnormally (%s)",
-		      strsignal (WTERMSIG (status)));
+	    err = asprintf (&desc, "stopped abnormally (%s)",
+			    strsignal (WTERMSIG (status)));
 	  else if (WEXITSTATUS (status) == 0)
-	    desc = strdup ("finished");
+	    {
+	      desc = strdup ("finished");
+	      err = (desc == 0 ? -1 : 0);
+	    }
 	  else
-	    asprintf (&desc, "exited with status %d",
-		      WEXITSTATUS (status));
+	    err = asprintf (&desc, "exited with status %d",
+			    WEXITSTATUS (status));
 
-	  error (0, 0, "child %s", desc);
-	  free (desc);
+	  if (err == -1)
+	    error (0, 0, "couldn't allocate exit reason message");
+	  else
+	    {
+	      error (0, 0, "child %s", desc);
+	      free (desc);
+	    }
 
 	  /* XXX: launch emergency shell.  */
 	  error (23, 0, "panic!!");
