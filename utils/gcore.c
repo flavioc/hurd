@@ -44,6 +44,7 @@ main (int argc, char **argv)
   int status = 0;
   file_t crashserv;
   int argi;
+  error_t err;
 
   argp_parse (&argp, argc, argv, 0, &argi, 0);
 
@@ -75,7 +76,9 @@ main (int argc, char **argv)
 	{
 	  file_t file;
 	  char *name = 0;
-	  asprintf (&name, "core.%d", pid);
+	  err = asprintf (&name, "core.%d", pid);
+	  if (err == -1)
+	    error (1, errno, "cannot allocate filename for pid %d", pid);
 
 	  file = file_name_lookup (name, O_WRONLY|O_CREAT,
 					  0600 &~ getumask ());
@@ -86,7 +89,7 @@ main (int argc, char **argv)
 	    }
 	  else
 	    {
-	      error_t err = crash_dump_task (crashserv, task, file,
+	      err = crash_dump_task (crashserv, task, file,
 					     0, 0, 0, 0, 0, 0,
 					     MACH_PORT_NULL,
 					     MACH_MSG_TYPE_COPY_SEND);
