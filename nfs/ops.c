@@ -2004,7 +2004,7 @@ netfs_get_dirents (struct iouser *cred, struct node *np,
 		   vm_size_t bufsiz, int *amt)
 {
   void *buf = NULL;
-  size_t our_bufsiz, allocsize;
+  size_t our_bufsiz = 0, allocsize;
   void *bp;
   char *userdp;
   error_t err;
