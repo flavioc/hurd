@@ -61,7 +61,9 @@ smp (char * const argv[])
 
   /* Drop privileges from suid binary */
   mach_port_deallocate (mach_task_self (), _hurd_host_priv);
-  setuid (getuid ());
+  err = setuid (getuid ());
+  if (err == -1)
+    error (1, errno, "failed to drop privileges");
 
   execve (argv[0], argv, environ);
 
