@@ -117,9 +117,13 @@ fstypes_get (struct fstypes *types, const char *name, struct fstype **fstype)
 
   for (fmt = fmts; fmt; fmt = argz_next (fmts, fmts_len, fmt))
     {
+      int err;
       int fd;
 
-      asprintf (&program, fmt, name);
+      err = asprintf (&program, fmt, name);
+      if (err == -1)
+	return errno;
+
       fd = open (program, O_EXEC);
       if (fd < 0)
 	{
