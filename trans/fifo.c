@@ -38,9 +38,9 @@
 #include "libtrivfs/trivfs_fs_S.h"
 #include "libtrivfs/trivfs_io_S.h"
 
-/* Global options.  These defaults are the standard ones, I think...   */
+/* Global options.  These defaults are the standard ones.   */
 int wait_for_reader = 1, wait_for_writer = 1;
-int one_reader = 1;
+int one_reader = 0;
 
 /* What kinds of pipes we use.  */
 struct pipe_class *fifo_pipe_class;
@@ -58,6 +58,7 @@ const char *argp_program_version = STANDARD_HURD_VERSION (fifo);
 static struct argp_option options[] =
 {
   { "multiple-readers", 'm', 0, 0, "Allow multiple simultaneous readers" },
+  { "single-reader",    's', 0, 0, "Allow only one reader at a time" },
   { "noblock",          'n', 0, 0, "Don't block on open" },
   { "dgram",            'd', 0, 0, "Reads reflect write record boundaries" },
   { 0 }
@@ -69,6 +70,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
   switch (key)
     {
     case 'm': one_reader = 0; break;
+    case 's': one_reader = 1; break;
     case 'n': wait_for_reader = wait_for_writer = 0; break;
     case 'd': fifo_pipe_class = seqpack_pipe_class; break;
     default: return ARGP_ERR_UNKNOWN;
