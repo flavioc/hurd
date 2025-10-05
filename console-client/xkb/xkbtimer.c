@@ -81,7 +81,7 @@ xkb_init_repeat (int delay, int repeat)
 static int
 key_enable (void *handle)
 {
-  int key = (int) handle;
+  int key = (intptr_t) handle;
   
   /* Enable the key.  */
   per_key_timers[key].disabled = 0;
@@ -102,7 +102,7 @@ xkb_generate_event (keycode_t kc)
 static int
 key_timing (void *handle)
 {
-  int current_key = (int) handle;
+  int current_key = (intptr_t) handle;
 
   xkb_generate_event (current_key);
 
@@ -158,7 +158,7 @@ xkb_key_released(keycode_t keycode, keycode_t keyc)
       /* Setup a timer to enable the key.  */
       timer_clear (&per_key_timers[keyc].disable_timer);
       per_key_timers[keyc].disable_timer.fnc = key_enable;
-      per_key_timers[keyc].disable_timer.fnc_data = (void *) keyc;
+      per_key_timers[keyc].disable_timer.fnc_data = (void *)(intptr_t) keyc;
       per_key_timers[keyc].disable_timer.expires
         = fetch_jiffies () + bouncekeys_delay;
       timer_add (&per_key_timers[keyc].disable_timer);
@@ -172,7 +172,7 @@ xkb_key_pressed(keycode_t keyc)
   timer_clear (&per_key_timers[keyc].enable_timer);
   lastkey = keyc;
   per_key_timers[keyc].enable_timer.fnc = key_timing;
-  per_key_timers[keyc].enable_timer.fnc_data = (void *) keyc;
+  per_key_timers[keyc].enable_timer.fnc_data = (void *)(intptr_t) keyc;
 
   if (slowkeys_active)
     {
