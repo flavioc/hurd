@@ -202,10 +202,19 @@ hurdtunif_device_init (struct netif *netif)
     base_name = name;
 
   if (base_name != name)
-    tunif->comm.devname = strdup (name);
+    {
+      tunif->comm.devname = strdup (name);
+      err = (tunif->comm.devname == 0 ? -1 : 0);
+    }
   else
     /* Setting up the translator at /dev/tunX.  */
-    asprintf (&tunif->comm.devname, "/dev/%s", base_name);
+    err = asprintf (&tunif->comm.devname, "/dev/%s", base_name);
+
+  if (err == -1)
+    {
+      error (0, errno, "hurdtunif_init: out of memory");
+      return ERR_MEM;
+    }
 
   /* Set the device type */
   tunif->comm.type = ARPHRD_TUNNEL;
