@@ -1955,11 +1955,12 @@ fetch_directory (struct iouser *cred, struct node *dir,
 	  if (bp + reclen > buf + bufmalloced)
 	    {
 	      char *newbuf;
+	      size_t current_size = bp - buf;
 
 	      newbuf = realloc (buf, bufmalloced *= 2);
 	      assert_backtrace (newbuf);
 	      if (newbuf != buf)
-		bp = newbuf + (bp - buf);
+		bp = newbuf + current_size;
 	      buf = newbuf;
 	    }
 
