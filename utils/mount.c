@@ -586,8 +586,11 @@ do_query (struct fs *fs)
 	  opts_len -= strlen (device) + 1;
 	  if (!strncmp (type_opt, argv[nopts - 1], sizeof type_opt - 1))
 	    {
-	      asprintf ((char **) &device, "%s:%s",
-			&argv[nopts - 1][sizeof type_opt - 1], device);
+	      err = asprintf ((char **) &device, "%s:%s",
+			      &argv[nopts - 1][sizeof type_opt - 1], device);
+	      if (err == -1)
+		error (1, errno, "asprintf failed");
+
 	      opts_len -= strlen (argv[nopts - 1]) + 1;
 	    }
 	}
