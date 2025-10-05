@@ -1240,7 +1240,7 @@ process_signal (int signo)
 	  if (pid == child_pid)
 	    {
 	      /* The big magilla bit the dust.  */
-
+	      error_t err;
 	      char *desc = 0;
 
 	      mach_port_deallocate (mach_task_self (), child_task);
@@ -1248,16 +1248,21 @@ process_signal (int signo)
 	      child_pid = -1;
 
 	      if (WIFSIGNALED (status))
-		asprintf (&desc, "terminated abnormally (%s)",
-			  strsignal (WTERMSIG (status)));
+		err = asprintf (&desc, "terminated abnormally (%s)",
+				strsignal (WTERMSIG (status)));
 	      else if (WIFSTOPPED (status))
-		asprintf (&desc, "stopped abnormally (%s)",
-			  strsignal (WTERMSIG (status)));
+		err = asprintf (&desc, "stopped abnormally (%s)",
+				strsignal (WTERMSIG (status)));
 	      else if (WEXITSTATUS (status) == 0)
-		desc = strdup ("finished");
+		{
+		  desc = strdup ("finished")
+		  err = (desc == 0 ? -1 : 0);
+		}
 	      else
-		asprintf (&desc, "exited with status %d",
-			  WEXITSTATUS (status));
+		err = asprintf (&desc, "exited with status %d",
+				WEXITSTATUS (status));
+	      if (err == -1)
+		error (0, errno, "failed to allocate message string");
 
 	      {
 		char buf[40];
