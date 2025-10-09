@@ -125,8 +125,13 @@ struct bpf_program {
 #define BPF_BUFSIZE	131072
 
 struct bpf_hdr {
+#if defined (__x86_64__)
+  int64_t usec;
+  int64_t sec;
+#else
   int32_t usec;
   int32_t sec;
+#endif
   uint32_t bh_caplen;	/* length of captured portion */
   uint32_t bh_datalen;	/* original length of packet */
   uint16_t bh_hdrlen;	/* length of this struct + alignment padding */
@@ -706,10 +711,7 @@ poll_again:
       todo -= buf_inc;
 
       if (fragment)
-        {
-          mach_print("fragment rcvd, try again\n");
-          return 0;
-        }
+        return 0;
 
       if (!cmp_hwaddr(hdr->h_source, nd->hw_address))
 	{
