@@ -456,7 +456,14 @@ lwip_S_iioctl_siocdifaddr (struct sock_user * user,
 			   const ifname_t ifnam,
 			   sockaddr_t addr)
 {
-  return EOPNOTSUPP;
+  /* To delete an address, we set it to ADDR_NONE.
+   * That will remove the netmask and the gateway as well.
+   */
+  struct sockaddr_in sin;
+  sin.sin_family = AF_INET;
+  sin.sin_addr.s_addr = INADDR_NONE;
+
+  return siocsifXaddr (user, ifnam, (struct sockaddr *) &sin, ADDR);
 }
 
 /* 33 SIOCGIFADDR -- Get address of a network interface.  */
