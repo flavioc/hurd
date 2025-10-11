@@ -73,7 +73,7 @@ static kern_return_t
 siocgifXaddr (struct sock_user *user,
 	      ifname_t ifnam, sockaddr_t * addr, enum siocgif_type type)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct sockaddr_in *sin = (struct sockaddr_in *) addr;
   size_t buflen = sizeof (struct sockaddr);
   struct netif *netif;
@@ -120,7 +120,7 @@ static kern_return_t
 siocsifXaddr (struct sock_user *user,
 	      const ifname_t ifnam, sockaddr_t * addr, enum siocgif_type type)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct sockaddr_in sin;
   size_t buflen = sizeof (struct sockaddr_in);
   struct netif *netif;
@@ -192,7 +192,7 @@ lwip_S_iioctl_siocsifflags (struct sock_user * user,
 			    const ifname_t ifnam,
 			    short flags)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct netif *netif;
 
   if (!user)
@@ -214,7 +214,7 @@ lwip_S_iioctl_siocsifflags (struct sock_user * user,
 kern_return_t
 lwip_S_iioctl_siocgifflags (struct sock_user * user, ifname_t name, short *flags)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct netif *netif;
 
   if (!user)
@@ -243,7 +243,7 @@ lwip_S_iioctl_siocgifmetric (struct sock_user * user,
 			     ifname_t ifnam,
 			     int *metric)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct netif *netif;
 
   if (!user)
@@ -291,12 +291,12 @@ SIOCGIF (brdaddr, BRDADDR);
 SIOCGIF (netmask, NETMASK);
 
 /* 39 SIOCGIFHWADDR -- Get the hardware address of a network interface.  */
-error_t
+kern_return_t
 lwip_S_iioctl_siocgifhwaddr (struct sock_user * user,
 			     ifname_t ifname,
 			     sockaddr_t * addr)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct netif *netif;
 
   if (!user)
@@ -315,10 +315,10 @@ lwip_S_iioctl_siocgifhwaddr (struct sock_user * user,
 }
 
 /* 51 SIOCGIFMTU -- Get mtu of a network interface.  */
-error_t
+kern_return_t
 lwip_S_iioctl_siocgifmtu (struct sock_user * user, ifname_t ifnam, int *mtu)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct netif *netif;
 
   if (!user)
@@ -336,10 +336,10 @@ lwip_S_iioctl_siocgifmtu (struct sock_user * user, ifname_t ifnam, int *mtu)
 }
 
 /* 51 SIOCSIFMTU -- Set mtu of a network interface.  */
-error_t
+kern_return_t
 lwip_S_iioctl_siocsifmtu (struct sock_user * user, const ifname_t ifnam, int mtu)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct netif *netif;
 
   if (!user)
@@ -363,12 +363,12 @@ lwip_S_iioctl_siocsifmtu (struct sock_user * user, const ifname_t ifnam, int mtu
 }
 
 /* 100 SIOCGIFINDEX -- Get index number of a network interface.  */
-error_t
+kern_return_t
 lwip_S_iioctl_siocgifindex (struct sock_user * user,
 			    ifname_t ifnam,
 			    int *index)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct netif *netif;
   int i;
 
@@ -394,12 +394,12 @@ lwip_S_iioctl_siocgifindex (struct sock_user * user,
 }
 
 /* 101 SIOCGIFNAME -- Get name of a network interface from index number.  */
-error_t
+kern_return_t
 lwip_S_iioctl_siocgifname (struct sock_user * user,
 			   ifname_t ifnam,
 			   int *index)
 {
-  error_t err = 0;
+  kern_return_t err = 0;
   struct netif *netif;
   int i;
 

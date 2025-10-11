@@ -32,7 +32,7 @@
 
 #include <lwip/sockets.h>
 
-error_t
+kern_return_t
 lwip_S_io_write (struct sock_user *user,
 		 const_data_t data,
 		 mach_msg_type_number_t datalen,
@@ -56,12 +56,12 @@ lwip_S_io_write (struct sock_user *user,
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_io_read (struct sock_user * user,
 		data_t *data,
 		mach_msg_type_number_t * datalen, off_t offset, vm_size_t amount)
 {
-  error_t err;
+  kern_return_t err;
   int alloced = 0;
   int flags;
 
@@ -104,17 +104,17 @@ lwip_S_io_read (struct sock_user * user,
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_io_seek (struct sock_user * user,
 		off_t offset, int whence, off_t * newp)
 {
   return user ? ESPIPE : EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_readable (struct sock_user * user, vm_size_t * amount)
 {
-  error_t err;
+  kern_return_t err;
   if (!user)
     return EOPNOTSUPP;
 
@@ -126,7 +126,7 @@ lwip_S_io_readable (struct sock_user * user, vm_size_t * amount)
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_io_set_all_openmodes (struct sock_user * user, int bits)
 {
   int opt;
@@ -144,7 +144,7 @@ lwip_S_io_set_all_openmodes (struct sock_user * user, int bits)
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_io_get_openmodes (struct sock_user * user, int *bits)
 {
   if (!user)
@@ -155,7 +155,7 @@ lwip_S_io_get_openmodes (struct sock_user * user, int *bits)
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_io_set_some_openmodes (struct sock_user * user, int bits)
 {
   if (!user)
@@ -171,7 +171,7 @@ lwip_S_io_set_some_openmodes (struct sock_user * user, int bits)
 }
 
 
-error_t
+kern_return_t
 lwip_S_io_clear_some_openmodes (struct sock_user * user, int bits)
 {
   if (!user)
@@ -189,7 +189,7 @@ lwip_S_io_clear_some_openmodes (struct sock_user * user, int bits)
 /*
  * Arrange things to call lwip_poll()
  */
-static error_t
+static kern_return_t
 lwip_io_select_common (struct sock_user *user,
 		       mach_port_t reply,
 		       mach_msg_type_name_t reply_type,
@@ -200,7 +200,7 @@ lwip_io_select_common (struct sock_user *user,
   struct pollfd fdp;
   nfds_t nfds;
   mach_port_type_t type;
-  error_t err;
+  kern_return_t err;
 
   if (!user)
     return EOPNOTSUPP;
@@ -254,7 +254,7 @@ lwip_io_select_common (struct sock_user *user,
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_io_select (struct sock_user * user,
 		  mach_port_t reply,
 		  mach_msg_type_name_t reply_type, int *select_type)
@@ -262,7 +262,7 @@ lwip_S_io_select (struct sock_user * user,
   return lwip_io_select_common (user, reply, reply_type, 0, select_type);
 }
 
-error_t
+kern_return_t
 lwip_S_io_select_timeout (struct sock_user * user,
 			  mach_port_t reply,
 			  mach_msg_type_name_t reply_type,
@@ -278,7 +278,7 @@ lwip_S_io_select_timeout (struct sock_user * user,
 }
 
 
-error_t
+kern_return_t
 lwip_S_io_stat (struct sock_user * user, struct stat * st)
 {
   if (!user)
@@ -296,14 +296,14 @@ lwip_S_io_stat (struct sock_user * user, struct stat * st)
   return 0;
 }
 
-error_t
+kern_return_t
 lwip_S_io_reauthenticate (struct sock_user * user, mach_port_t rend)
 {
   struct sock_user *newuser;
   uid_t gubuf[20], ggbuf[20], aubuf[20], agbuf[20];
   uid_t *gen_uids, *gen_gids, *aux_uids, *aux_gids;
   mach_msg_type_number_t genuidlen, gengidlen, auxuidlen, auxgidlen;
-  error_t err;
+  kern_return_t err;
   size_t i, j;
   auth_t auth;
   mach_port_t newright;
@@ -374,7 +374,7 @@ lwip_S_io_reauthenticate (struct sock_user * user, mach_port_t rend)
   return 0;
 }
 
-error_t
+kern_return_t
 lwip_S_io_restrict_auth (struct sock_user * user,
 			 mach_port_t * newobject,
 			 mach_msg_type_name_t * newobject_type,
@@ -409,7 +409,7 @@ lwip_S_io_restrict_auth (struct sock_user * user,
   return 0;
 }
 
-error_t
+kern_return_t
 lwip_S_io_duplicate (struct sock_user * user,
 		     mach_port_t * newobject,
 		     mach_msg_type_name_t * newobject_type)
@@ -426,14 +426,14 @@ lwip_S_io_duplicate (struct sock_user * user,
   return 0;
 }
 
-error_t
+kern_return_t
 lwip_S_io_identity (struct sock_user * user,
 		    mach_port_t * id,
 		    mach_msg_type_name_t * idtype,
 		    mach_port_t * fsys,
 		    mach_msg_type_name_t * fsystype, ino_t * fileno)
 {
-  error_t err;
+  kern_return_t err;
 
   if (!user)
     return EOPNOTSUPP;
@@ -457,13 +457,13 @@ lwip_S_io_identity (struct sock_user * user,
   return 0;
 }
 
-error_t
+kern_return_t
 lwip_S_io_revoke (struct sock_user * user)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_async (struct sock_user * user,
 		 mach_port_t notify,
 		 mach_port_t * id, mach_msg_type_name_t * idtype)
@@ -471,39 +471,39 @@ lwip_S_io_async (struct sock_user * user,
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_mod_owner (struct sock_user * user, pid_t owner)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_get_owner (struct sock_user * user, pid_t * owner)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_get_icky_async_id (struct sock_user * user,
 			     mach_port_t * id, mach_msg_type_name_t * idtype)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_server_version (struct sock_user * user,
 			  string_t name, int *major, int *minor, int *edit)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_pathconf (struct sock_user * user, int name, int *value)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_map (struct sock_user * user,
 	       mach_port_t * rdobj,
 	       mach_msg_type_name_t * rdobj_type,
@@ -512,58 +512,58 @@ lwip_S_io_map (struct sock_user * user,
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_map_cntl (struct sock_user * user,
 		    mach_port_t * obj, mach_msg_type_name_t * obj_type)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_get_conch (struct sock_user * user)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_release_conch (struct sock_user * user)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_eofnotify (struct sock_user * user)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_prenotify (struct sock_user * user,
 		     vm_offset_t start, vm_offset_t end)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_postnotify (struct sock_user * user,
 		      vm_offset_t start, vm_offset_t end)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_readnotify (struct sock_user * user)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_readsleep (struct sock_user * user)
 {
   return EOPNOTSUPP;
 }
 
-error_t
+kern_return_t
 lwip_S_io_sigio (struct sock_user * user)
 {
   return EOPNOTSUPP;

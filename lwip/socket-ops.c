@@ -28,13 +28,13 @@
 #include <lwip/sockets.h>
 #include <lwip-hurd.h>
 
-error_t
+kern_return_t
 lwip_S_socket_create (struct trivfs_protid *master,
 		      int sock_type,
 		      int protocol,
 		      mach_port_t * port, mach_msg_type_name_t * porttype)
 {
-  error_t err;
+  kern_return_t err;
   struct sock_user *user;
   struct socket *sock;
   int isroot;
@@ -87,7 +87,7 @@ lwip_S_socket_create (struct trivfs_protid *master,
 
 
 /* Listen on a socket. */
-error_t
+kern_return_t
 lwip_S_socket_listen (struct sock_user * user, int queue_limit)
 {
   if (!user)
@@ -98,7 +98,7 @@ lwip_S_socket_listen (struct sock_user * user, int queue_limit)
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_accept (struct sock_user * user,
 		      mach_port_t * new_port,
 		      mach_msg_type_name_t * new_port_type,
@@ -108,7 +108,7 @@ lwip_S_socket_accept (struct sock_user * user,
   struct sock_user *newuser;
   struct sockaddr_storage addr;
   socklen_t addr_len;
-  error_t err;
+  kern_return_t err;
   struct socket *sock, *newsock;
 
   if (!user)
@@ -146,10 +146,10 @@ lwip_S_socket_accept (struct sock_user * user,
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_connect (struct sock_user * user, struct sock_addr * addr)
 {
-  error_t err;
+  kern_return_t err;
 
   if (!user || !addr)
     return EOPNOTSUPP;
@@ -169,10 +169,10 @@ lwip_S_socket_connect (struct sock_user * user, struct sock_addr * addr)
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_bind (struct sock_user * user, struct sock_addr * addr)
 {
-  error_t err;
+  kern_return_t err;
 
   if (!user)
     return EOPNOTSUPP;
@@ -189,12 +189,12 @@ lwip_S_socket_bind (struct sock_user * user, struct sock_addr * addr)
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_name (struct sock_user * user,
 		    mach_port_t * addr_port,
 		    mach_msg_type_name_t * addr_port_name)
 {
-  error_t err;
+  kern_return_t err;
 
   if (!user)
     return EOPNOTSUPP;
@@ -204,12 +204,12 @@ lwip_S_socket_name (struct sock_user * user,
   return err;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_peername (struct sock_user * user,
 			mach_port_t * addr_port,
 			mach_msg_type_name_t * addr_port_name)
 {
-  error_t err;
+  kern_return_t err;
 
   if (!user)
     return EOPNOTSUPP;
@@ -219,7 +219,7 @@ lwip_S_socket_peername (struct sock_user * user,
   return err;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_connect2 (struct sock_user * user, struct sock_user * sock2)
 {
   /* We don't answer AF_UNIX requests */
@@ -229,7 +229,7 @@ lwip_S_socket_connect2 (struct sock_user * user, struct sock_user * sock2)
 /*
  * Receive address data, create a libports object and return its port
  */
-error_t
+kern_return_t
 lwip_S_socket_create_address (mach_port_t server,
 			      int sockaddr_type,
 			      const char *data,
@@ -237,7 +237,7 @@ lwip_S_socket_create_address (mach_port_t server,
 			      mach_port_t * addr_port,
 			      mach_msg_type_name_t * addr_port_type)
 {
-  error_t err;
+  kern_return_t err;
   struct sock_addr *addrstruct;
   const struct sockaddr *const sa = (void *) data;
 
@@ -265,7 +265,7 @@ lwip_S_socket_create_address (mach_port_t server,
   return 0;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_fabricate_address (mach_port_t server,
 				 int sockaddr_type,
 				 mach_port_t * addr_port,
@@ -277,7 +277,7 @@ lwip_S_socket_fabricate_address (mach_port_t server,
 /*
  * Receive a libports object and return its data
  */
-error_t
+kern_return_t
 lwip_S_socket_whatis_address (struct sock_addr * addr,
 			      int *type,
 			      char **data, mach_msg_type_number_t * datalen)
@@ -295,7 +295,7 @@ lwip_S_socket_whatis_address (struct sock_addr * addr,
   return 0;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_shutdown (struct sock_user * user, int direction)
 {
   if (!user)
@@ -306,7 +306,7 @@ lwip_S_socket_shutdown (struct sock_user * user, int direction)
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_getopt (struct sock_user * user,
 		      int level, int option, char **data, mach_msg_type_number_t * datalen)
 {
@@ -321,7 +321,7 @@ lwip_S_socket_getopt (struct sock_user * user,
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_setopt (struct sock_user * user,
 		      int level, int option, const char *data, mach_msg_type_number_t datalen)
 {
@@ -333,7 +333,7 @@ lwip_S_socket_setopt (struct sock_user * user,
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_send (struct sock_user * user,
 		    struct sock_addr * addr,
 		    int flags,
@@ -380,7 +380,7 @@ lwip_S_socket_send (struct sock_user * user,
   return errno;
 }
 
-error_t
+kern_return_t
 lwip_S_socket_recv (struct sock_user * user,
 		    mach_port_t * addrport,
 		    mach_msg_type_name_t * addrporttype,
@@ -394,7 +394,7 @@ lwip_S_socket_recv (struct sock_user * user,
 		    mach_msg_type_number_t * controllen,
 		    int *outflags, vm_size_t amount)
 {
-  error_t err;
+  kern_return_t err;
   union { struct sockaddr_storage storage; struct sockaddr sa; } addr;
   int alloced = 0;
   int sockflags;

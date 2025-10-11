@@ -78,7 +78,7 @@ dev_ifconf (struct ifconf *ifc)
 /* Return the list of devices in the format provided by SIOCGIFCONF
    in IFR, but don't return more then AMOUNT bytes. If AMOUNT is
    negative, there is no limit.  */
-error_t
+kern_return_t
 lwip_S_pfinet_siocgifconf (io_t port,
 			   vm_size_t amount,
 			   char **ifr, mach_msg_type_number_t * len)
@@ -114,7 +114,7 @@ lwip_S_pfinet_siocgifconf (io_t port,
   return 0;
 }
 
-error_t
+kern_return_t
 lwip_S_pfinet_getroutes (io_t port,
 			 vm_size_t amount,
 			 data_t *routes,
