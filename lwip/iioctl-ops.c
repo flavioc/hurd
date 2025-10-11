@@ -56,7 +56,8 @@ enum siocgif_type
   ADDR,
   NETMASK,
   DSTADDR,
-  BRDADDR
+  BRDADDR,
+  GWADDR,
 };
 
 #define SIOCGIF(name, type)						\
@@ -77,7 +78,7 @@ siocgifXaddr (struct sock_user *user,
   struct sockaddr_in *sin = (struct sockaddr_in *) addr;
   size_t buflen = sizeof (struct sockaddr);
   struct netif *netif;
-  uint32_t addrs[4];
+  uint32_t addrs[5];
 
   if (!user)
     return EOPNOTSUPP;
@@ -98,8 +99,8 @@ siocgifXaddr (struct sock_user *user,
     err = EINVAL;
   else
     {
-      inquire_device (netif, &addrs[0], &addrs[1], &addrs[2], &addrs[3], 0, 0,
-		      0);
+      inquire_device (netif, &addrs[ADDR], &addrs[NETMASK], &addrs[DSTADDR],
+		      &addrs[BRDADDR], &addrs[GWADDR], 0, 0);
       sin->sin_addr.s_addr = addrs[type];
     }
 
@@ -149,14 +150,15 @@ siocsifXaddr (struct sock_user *user,
     err = EINVAL;
   else
     {
-      inquire_device (netif, &ipv4_addrs[0], &ipv4_addrs[1],
-		      &ipv4_addrs[2], &ipv4_addrs[3], &ipv4_addrs[4], 0, 0);
+      inquire_device (netif, &ipv4_addrs[ADDR], &ipv4_addrs[NETMASK],
+		      &ipv4_addrs[DSTADDR], &ipv4_addrs[BRDADDR],
+		      &ipv4_addrs[GWADDR], 0, 0);
 
       ipv4_addrs[type] = ((struct sockaddr_in *) addr)->sin_addr.s_addr;
 
-      err = configure_device (netif, ipv4_addrs[0], ipv4_addrs[1],
-			      ipv4_addrs[2], ipv4_addrs[3], ipv4_addrs[4], 0,
-			      0);
+      err = configure_device (netif, ipv4_addrs[ADDR], ipv4_addrs[NETMASK],
+			      ipv4_addrs[DSTADDR], ipv4_addrs[BRDADDR],
+			      ipv4_addrs[GWADDR], 0, 0);
     }
 
   return err;
