@@ -30,7 +30,10 @@
 
 #include <lwip-hurd.h>
 #include <lwip-util.h>
+#include <lwip/tcpip.h>
 #include <netif/ifcommon.h>
+#include <netinet/in.h>
+#include <hurd/ioctl_types.h>
 
 /* Get the interface from its name */
 static struct netif *
@@ -167,22 +170,195 @@ siocsifXaddr (struct sock_user *user,
   return err;
 }
 
+static void
+set_default_if (void *arg)
+{
+  struct netif *netif;
+
+  netif = (struct netif *) arg;
+
+  netif_set_default (netif);
+}
+
 /* 10 SIOCADDRT -- Add a network route */
+/*
+ * Lwip routing is very limited. Each netif has one gateway and all packets from/to that netif go through there.
+ * Considering this, we need to behave as clients expect.
+ *
+ * These are the supported scenarios:
+ *   - A client sending an interface plus a netmask but gateway=any: intends to add a subnet route.
+ *     e.g. `192.168.1.0/24 dev eth0`
+ *   - A client sending an interface plus a gateway but netmask=any: intends to set a default gateway.
+ *     e.g. `0.0.0.0/0 via 192.168.1.1`
+ */
 kern_return_t
 lwip_S_rioctl_siocaddrt (struct sock_user *user,
-			 const ifname_t ifnam,
-			 const struct srtentry route)
+			 const ifname_t ifnam, const struct srtentry route)
 {
-  return EOPNOTSUPP;
+  kern_return_t err = 0;
+  struct netif *netif;
+  struct sockaddr sa;
+  size_t buflen = sizeof (struct sockaddr);
+  uint32_t ipv4_addrs[5];
+
+  if (!user)
+    return EOPNOTSUPP;
+
+  if (!user->isroot)
+    return EPERM;
+
+  /* All ones netmask means host route, not supported by lwip */
+  if (route.rt_mask == INADDR_NONE)
+    return EOPNOTSUPP;
+
+  netif = get_if (ifnam);
+  if (!netif)
+    return ENODEV;
+
+  err = lwip_getsockname (user->sock->sockno, &sa, (socklen_t *)&buflen);
+  if (err)
+    return err;
+
+  if (sa.sa_family != AF_INET)
+    return EINVAL;
+
+  inquire_device (netif, &ipv4_addrs[ADDR], &ipv4_addrs[NETMASK],
+		  &ipv4_addrs[DSTADDR], &ipv4_addrs[BRDADDR],
+		  &ipv4_addrs[GWADDR], 0, 0);
+
+  if (route.rt_mask != INADDR_ANY && route.rt_gateway == INADDR_ANY)
+    {
+      /*
+       * Subnet route.
+       * Only one network can go through the interface so we set the netmask to the interface.
+       */
+
+      /* masking current IP must match given dest to be valid */
+      if (ipv4_addrs[ADDR] != INADDR_ANY && ipv4_addrs[ADDR] != INADDR_NONE
+	  && (ipv4_addrs[ADDR] & route.rt_mask) != route.rt_dest)
+	return ENETUNREACH;
+
+      ipv4_addrs[NETMASK] = route.rt_mask;
+    }
+  else if (route.rt_gateway != INADDR_ANY)
+    {
+      /*
+       * Netmask is any, and we got a gateway so client is trying to add a default route.
+       * We set the given gateway to the given interface and set the interface as default.
+       */
+
+      /* First we verify the gateway is reachable from this netif */
+      if (ipv4_addrs[ADDR] != INADDR_ANY && ipv4_addrs[ADDR] != INADDR_NONE
+	  && ipv4_addrs[NETMASK] != INADDR_ANY
+	  && ipv4_addrs[NETMASK] != INADDR_NONE
+	  && (route.rt_gateway & ipv4_addrs[NETMASK]) !=
+	  (ipv4_addrs[ADDR] & ipv4_addrs[NETMASK]))
+	return EHOSTUNREACH;
+
+      ipv4_addrs[GWADDR] = route.rt_gateway;
+      tcpip_callback (set_default_if, netif);
+    }
+  else
+    {
+      /* Any  other scenario not supported */
+      return EOPNOTSUPP;
+    }
+
+  err = configure_device (netif, ipv4_addrs[ADDR], ipv4_addrs[NETMASK],
+			  ipv4_addrs[DSTADDR], ipv4_addrs[BRDADDR],
+			  ipv4_addrs[GWADDR], 0, 0);
+
+  return err;
 }
 
 /* 11 SIOCDELRT -- Delete a network route */
+/*
+ * The only routing lwip supports is the default gateway for each netif.
+ * We interpret "deleting a route" as removing the current gateway and netmask,
+ * but only if the given route matches.
+ *
+ * Supported scenarios:
+ *   - A client sending an interface plus a netmask but gateway=any: intends to remove a subnet route.
+ *     e.g. `192.168.1.0/24 dev eth0`
+ *   - A client sending an interface plus a gateway but netmask=any: intends to remove a default gateway.
+ *     e.g. `0.0.0.0/0 via 192.168.1.1`
+ */
 kern_return_t
 lwip_S_rioctl_siocdelrt (struct sock_user *user,
-			 const ifname_t ifnam,
-			 const struct srtentry route)
+			 const ifname_t ifnam, const struct srtentry route)
 {
-  return EOPNOTSUPP;
+  kern_return_t err = 0;
+  struct netif *netif;
+  struct sockaddr sa;
+  size_t buflen = sizeof (struct sockaddr);
+  uint32_t ipv4_addrs[5];
+
+  if (!user)
+    return EOPNOTSUPP;
+
+  if (!user->isroot)
+    return EPERM;
+
+  netif = get_if (ifnam);
+  if (!netif)
+    return ENODEV;
+
+  err = lwip_getsockname (user->sock->sockno, &sa, (socklen_t *)&buflen);
+  if (err)
+    return err;
+
+  if (sa.sa_family != AF_INET)
+    return EINVAL;
+
+  inquire_device (netif, &ipv4_addrs[ADDR], &ipv4_addrs[NETMASK],
+		  &ipv4_addrs[DSTADDR], &ipv4_addrs[BRDADDR],
+		  &ipv4_addrs[GWADDR], 0, 0);
+
+  if (route.rt_mask != INADDR_ANY && route.rt_gateway == INADDR_ANY)
+    {
+      /*
+       * Subnet route.
+       * Only one network can go through the interface so we remove the netmask from the interface.
+       */
+
+      /* We remove the netmask only if it matches the given one */
+      if (ipv4_addrs[NETMASK] != INADDR_ANY
+	  && ipv4_addrs[NETMASK] != INADDR_NONE
+	  && ipv4_addrs[NETMASK] != route.rt_mask)
+	return EINVAL;
+
+      ipv4_addrs[NETMASK] = INADDR_NONE;
+    }
+  else if (route.rt_gateway != INADDR_ANY)
+    {
+      /*
+       * Netmask is any, and we got a gateway so client is trying to remove a default route.
+       * We remove the gateway from the given interface.
+       */
+
+      /* We remove the gateway only if it matches the given one */
+      if (ipv4_addrs[GWADDR] != INADDR_ANY
+	  && ipv4_addrs[GWADDR] != INADDR_NONE
+	  && ipv4_addrs[GWADDR] != route.rt_gateway)
+	return EINVAL;
+
+      /* And only if it was the default one */
+      if (netif != netif_default)
+	return EINVAL;
+
+      ipv4_addrs[GWADDR] = INADDR_NONE;
+    }
+  else
+    {
+      /* Any  other scenario not supported */
+      return EOPNOTSUPP;
+    }
+
+  err = configure_device (netif, ipv4_addrs[ADDR], ipv4_addrs[NETMASK],
+			  ipv4_addrs[DSTADDR], ipv4_addrs[BRDADDR],
+			  ipv4_addrs[GWADDR], 0, 0);
+
+  return err;
 }
 
 /* 12 SIOCSIFADDR -- Set address of a network interface.  */
