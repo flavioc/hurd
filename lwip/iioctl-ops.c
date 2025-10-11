@@ -130,6 +130,9 @@ siocsifXaddr (struct sock_user *user,
   if (!user)
     return EOPNOTSUPP;
 
+  if (addr->sa_family != AF_INET)
+    return EINVAL;
+
   if (!user->isroot)
     return EPERM;
 
