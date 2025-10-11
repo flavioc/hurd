@@ -39,7 +39,7 @@ get_if (const char *name)
   char ifname[IFNAMSIZ];
   struct netif *netif;
 
-  memcpy (ifname, name, IFNAMSIZ - 1);
+  strncpy (ifname, name, IFNAMSIZ - 1);
   ifname[IFNAMSIZ - 1] = 0;
 
   NETIF_FOREACH(netif)
