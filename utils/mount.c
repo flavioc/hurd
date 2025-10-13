@@ -61,7 +61,7 @@ static const struct argp_option argp_opts[] =
   {"update", 'u', 0, 0, "Flush any meta-data cached in core"},
   {"remount", 0, 0, OPTION_ALIAS},
   {"verbose", 'v', 0, 0, "Give more detailed information"},
-  {"no-mtab", 'n', 0, 0, "Do not update /etc/mtab"},
+  {"no-mtab", 'n', 0, 0, "Do not update " _PATH_MOUNTED},
   {"test-opts", 'O', "OPTIONS", 0,
    "Only mount fstab entries matching the given set of options"},
   {"bind", 'B', 0, 0, "Bind mount, firmlink"},

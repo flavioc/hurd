@@ -32,10 +32,6 @@
 #include "match-options.h"
 #include "../sutils/fstab.h"
 
-/* XXX fix libc */
-#undef _PATH_MOUNTED
-#define _PATH_MOUNTED "/etc/mtab"
-
 static char *targets;
 static size_t targets_len;
 static int readonly;
@@ -54,7 +50,7 @@ static const struct argp_option argp_opts[] =
   {NULL, 'd', 0, 0, "Also ask the source translator to go away"},
   {"fake", FAKE_KEY, 0, 0, "Do not actually umount, just pretend"},
   {"force", 'f', 0, 0, "Force umount by killing the translator"},
-  {"no-mtab", 'n', 0, 0, "Do not update /etc/mtab"},
+  {"no-mtab", 'n', 0, 0, "Do not update " _PATH_MOUNTED},
   {"read-only", 'r', 0, 0, "If unmounting fails, try to remount read-only"},
   {"nosync", 'S', 0, 0, "Don't sync a translator before killing it"},
   {"test-opts", 'O', "OPTIONS", 0,
