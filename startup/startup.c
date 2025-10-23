@@ -1255,7 +1255,7 @@ process_signal (int signo)
 				strsignal (WTERMSIG (status)));
 	      else if (WEXITSTATUS (status) == 0)
 		{
-		  desc = strdup ("finished")
+		  desc = strdup ("finished");
 		  err = (desc == 0 ? -1 : 0);
 		}
 	      else
