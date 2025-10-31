@@ -171,6 +171,19 @@ siocsifXaddr (struct sock_user *user,
 }
 
 static void
+clear_gateways (void *arg)
+{
+  struct netif *netif;
+  struct ip4_addr gw;
+
+  gw.addr = INADDR_NONE;
+  NETIF_FOREACH (netif)
+  {
+    netif_set_gw (netif, &gw);
+  }
+}
+
+static void
 set_default_if (void *arg)
 {
   struct netif *netif;
@@ -254,6 +267,14 @@ lwip_S_rioctl_siocaddrt (struct sock_user *user,
 	  && (route.rt_gateway & ipv4_addrs[NETMASK]) !=
 	  (ipv4_addrs[ADDR] & ipv4_addrs[NETMASK]))
 	return EHOSTUNREACH;
+
+      /*
+       * Since we only allow setting a gateway when it will become the default gateway,
+       * any existing gateway must have been previously set as the default. However, there
+       * can only be one default gateway at a time, so we must clear any existing gateways
+       * before setting the new one.
+       */
+      tcpip_callback (clear_gateways, NULL);
 
       ipv4_addrs[GWADDR] = route.rt_gateway;
       tcpip_callback (set_default_if, netif);
