@@ -191,7 +191,7 @@ mkdev() {
 	;;
       [hrscwu]d*|ucd*)
 	local sliceno=
-        local n="${I#?d}"
+        local n="${I#*d}"
 	local major="${n%%[!0-9]*}"
 	if [ -z "$major" ]; then
 	  lose "$I: Invalid device name: must supply a device number"
