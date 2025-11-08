@@ -108,6 +108,10 @@ diskfs_S_dir_rename (struct protid *fromcred,
 
   /* We now hold no locks */
 
+  if (toname[strlen (toname) - 1] == '/')
+    /* Source must be directory.  */
+    return ENOTDIR;
+
   /* Link the node into the new directory. */
   pthread_mutex_lock (&tdp->lock);
   
