@@ -33,6 +33,7 @@
 #include <string.h>
 #include <version.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -48,6 +49,8 @@ const char *argp_program_version = STANDARD_HURD_VERSION (rpctrace);
 
 static unsigned strsize = 80;
 
+static unsigned timestamps;
+
 static const struct argp_option options[] =
 {
   {"output", 'o', "FILE", 0, "Send trace output to FILE instead of stderr."},
@@ -55,6 +58,7 @@ static const struct argp_option options[] =
   {0, 'E', "var[=value]", 0,
    "Set/change (var=value) or remove (var) an environment variable among the "
    "ones inherited by the executed process."},
+  {0, 't', 0, 0, "Print timestamps"},
   {0}
 };
 
@@ -1469,6 +1473,38 @@ static void
 print_request_header (struct sender_info *receiver, mach_msg_header_t *msg)
 {
   const char *msgname = msgid_name (msg->msgh_id);
+
+  if (timestamps > 0)
+    {
+      char timestamp[32] = "";
+      struct timeval tv;
+
+      gettimeofday (&tv, NULL);
+
+      if (timestamps < 3)
+	{
+	  time_t t = tv.tv_sec;
+	  struct tm tm;
+
+	  localtime_r (&t, &tm);
+
+	  if (timestamps == 1)
+	    snprintf (timestamp, sizeof (timestamp),
+		      "%02d:%02d:%02d",
+		      tm.tm_hour, tm.tm_min, tm.tm_sec);
+	  else /* (timestamps == 2) */
+	    snprintf (timestamp, sizeof (timestamp),
+		      "%02d:%02d:%02d.%06lld",
+		      tm.tm_hour, tm.tm_min, tm.tm_sec, (long long) tv.tv_usec);
+	}
+      else /* (timestamps >= 3) */
+	snprintf (timestamp, sizeof (timestamp),
+		  "%lld.%06lld",
+		  (long long) tv.tv_sec, (long long) tv.tv_usec);
+
+      fprintf (ostream, "%s ", timestamp);
+    }
+
   print_ellipsis ();
   last_reply_port = msg->msgh_local_port;
 
@@ -1769,6 +1805,10 @@ main (int argc, char **argv, char **envp)
 	      if (envz_add (&envz, &envz_len, name, newval))
 		error (1, errno, "envz_add");
 	    }
+	  break;
+
+	case 't':
+	  timestamps++;
 	  break;
 
 	case ARGP_KEY_NO_ARGS:
