@@ -82,7 +82,7 @@ st() {
   if [ "$KEEP" ] && showtrans "$NODE" > /dev/null 2>&1 ; then
     return;
   fi
-  if [ ! -e "$NODE" ]; then
+  if ! exists "$NODE" ; then
     case "$NODE_TYPE" in
       b|c)
         cmd mknod "$NODE" "$NODE_TYPE" 0 0
