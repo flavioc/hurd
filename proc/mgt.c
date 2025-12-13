@@ -1102,6 +1102,8 @@ process_has_exited (struct proc *p)
 				1, tp->p_pgrp->pg_pgid,
 				!tp->p_pgrp->pg_orphcnt);
       tp->p_parent = reparent_to;
+      if (tp->p_dead)
+	isdead = 1;
 
       /* And now append the lists. */
       tp->p_sib = reparent_to->p_ochild;
