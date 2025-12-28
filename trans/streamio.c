@@ -589,12 +589,6 @@ io_select_common (struct trivfs_protid *cred,
 	  return 0;
 	}
 
-      if (cred->po->openmodes & O_NONBLOCK)
-	{
-	  pthread_mutex_unlock (&global_lock);
-	  return EWOULDBLOCK;
-	}
-
       ports_interrupt_self_on_port_death (cred, reply);
       err = pthread_hurd_cond_timedwait_np (&select_alert, &global_lock, tsp);
       if (err)
