@@ -190,6 +190,8 @@ error_t dev_write (const void *buf, size_t len, size_t *amount, int nowait);
    will wait for any activity to cease.  */
 error_t dev_sync (int wait);
 
+static error_t start_input (int nowait);
+static error_t start_output (int nowait);
 
 
 static struct argp_option options[] =
@@ -587,6 +589,27 @@ io_select_common (struct trivfs_protid *cred,
 	  *type = available;
 	  pthread_mutex_unlock (&global_lock);
 	  return 0;
+	}
+
+      if (*type & SELECT_READ)
+	{
+	  err = start_input(1);
+	  if (err)
+	    {
+	      *type = 0;
+	      pthread_mutex_unlock (&global_lock);
+	      return err;
+	    }
+	}
+      if (*type & SELECT_WRITE)
+	{
+	  err = start_output(1);
+	  if (err)
+	    {
+	      *type = 0;
+	      pthread_mutex_unlock (&global_lock);
+	      return err;
+	    }
 	}
 
       ports_interrupt_self_on_port_death (cred, reply);
