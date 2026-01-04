@@ -517,6 +517,7 @@ lwip_S_iioctl_siocgifhwaddr (struct sock_user * user,
   else
     {
       memcpy (addr->sa_data, netif->hwaddr, netif->hwaddr_len);
+      addr->sa_len = netif->hwaddr_len;
       addr->sa_family = netif_get_state (netif)->type;
     }
 
