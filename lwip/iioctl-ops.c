@@ -580,21 +580,17 @@ lwip_S_iioctl_siocgifindex (struct sock_user * user,
 {
   kern_return_t err = 0;
   struct netif *netif;
-  int i;
 
   if (!user)
     return EOPNOTSUPP;
 
-  i = 1;			/* The first index must be 1 */
   NETIF_FOREACH(netif)
     {
       if (strcmp (netif_get_state (netif)->devname, ifnam) == 0)
 	{
-	  *index = i;
+	  *index = netif_get_index (netif);
 	  break;
 	}
-
-      i++;
     }
 
   if (!netif)
