@@ -528,15 +528,17 @@ hurdethif_device_init (struct netif *netif)
   /* Enable Ethernet multicasting */
   hurdethif_device_get_flags (netif, &netif_get_state (netif)->flags);
   netif_get_state (netif)->flags |=
-    IFF_UP | IFF_RUNNING | IFF_BROADCAST | IFF_ALLMULTI;
+    IFF_UP | IFF_BROADCAST | IFF_ALLMULTI;
   hurdethif_device_set_flags (netif, netif_get_state (netif)->flags);
 
   /*
    * Up the link, set the interface type to NETIF_FLAG_ETHARP
    * and enable other features.
    */
-  netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP
-    | NETIF_FLAG_IGMP | NETIF_FLAG_MLD6;
+  netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP | NETIF_FLAG_MLD6;
+
+  if (netif_get_state (netif)->flags & IFF_RUNNING)
+    netif->flags |= NETIF_FLAG_LINK_UP;
 
   return ERR_OK;
 }

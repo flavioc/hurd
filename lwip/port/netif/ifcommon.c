@@ -39,7 +39,7 @@ if_open (struct netif *netif)
   if (!err)
     {
       /* Up the inerface */
-      ifc->flags |= IFF_UP | IFF_RUNNING;
+      ifc->flags |= IFF_UP;
       netif_set_up (netif);
     }
 
