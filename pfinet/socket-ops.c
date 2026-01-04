@@ -492,7 +492,7 @@ S_socket_recv (struct sock_user *user,
   int alloced = 0;
   struct iovec iov;
   struct msghdr m = { msg_name: &addr.sa, msg_namelen: sizeof addr,
-		      msg_controllen: 0, msg_iov: &iov, msg_iovlen: 1 };
+    msg_control: *control, msg_controllen: *controllen, msg_iov: &iov, msg_iovlen: 1 };
 
   if (!user)
     return EOPNOTSUPP;
@@ -541,7 +541,7 @@ S_socket_recv (struct sock_user *user,
       *outflags = m.msg_flags;
       *nports = 0;
       *portstype = MACH_MSG_TYPE_COPY_SEND;
-      *controllen = 0;
+      *controllen = m.msg_controllen;
     }
 
   return err;
