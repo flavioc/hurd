@@ -536,6 +536,7 @@ S_iioctl_siocgifhwaddr (struct sock_user *user,
   else
     {
       memcpy (addr->sa_data, dev->dev_addr, dev->addr_len);
+      addr->sa_len = dev->addr_len;
       addr->sa_family = dev->type;
     }
   
