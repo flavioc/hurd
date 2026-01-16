@@ -112,7 +112,22 @@ diskfs_cached_lookup_context (ino_t inum, struct node **npp,
   /* Get the contents of NP off disk.  */
   err = diskfs_user_read_node (np, ctx);
   if (err)
+   {
+    pthread_rwlock_wrlock (&nodecache_lock);
+    hurd_ihash_remove (&nodecache, (hurd_ihash_key_t) &np->cache_id);
+    pthread_rwlock_unlock (&nodecache_lock);
+
+    /* Don't delete from disk. */
+    np->dn_stat.st_nlink = 1;
+    np->allocsize = 0;
+    np->dn_set_ctime = 0;
+    np->dn_set_atime = 0;
+    np->dn_set_mtime = 0;
+    diskfs_nput (np);
+    *npp = NULL;
+
     return err;
+   }
   else
     {
       *npp = np;
