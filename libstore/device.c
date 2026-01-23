@@ -88,6 +88,16 @@ dev_write (struct store *store, store_offset_t addr,
 }
 
 static error_t
+dev_sync (struct store *store)
+{
+#ifdef DEV_FLUSH_CACHE
+  return device_set_status (store->port, DEV_FLUSH_CACHE, NULL, 0);
+#else
+  return EOPNOTSUPP;
+#endif
+}
+
+static error_t
 dev_set_size (struct store *store, size_t newsize)
 {
   return EOPNOTSUPP;
@@ -318,7 +328,7 @@ store_device_class =
 {
   STORAGE_DEVICE, "device", dev_read, dev_write, dev_set_size,
   store_std_leaf_allocate_encoding, store_std_leaf_encode, dev_decode,
-  dev_set_flags, dev_clear_flags, 0, 0, 0, dev_open, 0, dev_map
+  dev_set_flags, dev_clear_flags, 0, 0, 0, dev_open, 0, dev_map, dev_sync
 };
 STORE_STD_CLASS (device);
 

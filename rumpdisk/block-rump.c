@@ -55,6 +55,15 @@
 #define RUMP_TYPE_STRING "rump USB"
 #endif
 
+#ifndef DIOCCACHESYNC
+  #ifdef _IOW
+    #define DIOCCACHESYNC _IOW('d', 118, int)
+  #else
+    /* Fallback if _IOW macro isn't visible, though ioccom-rump.h should have it */
+    #define DIOCCACHESYNC (0x80000000 | (sizeof(int) << 16) | ('d' << 8) | 118)
+  #endif
+#endif
+
 static bool disabled;
 
 static mach_port_t master_host;
@@ -535,11 +544,26 @@ static io_return_t
 rumpdisk_device_set_status (void *d, dev_flavor_t flavor, dev_status_t status,
 			    mach_msg_type_number_t status_count)
 {
+  struct block_data *bd = d;
+  int ret;
+  int force = 1;
   switch (flavor)
     {
     case BLKRRPART:
       /* Partitions are not implemented here, but in the parted-based
        * translators.  */
+      return D_SUCCESS;
+    case DEV_FLUSH_CACHE:
+      /* * Rump/NetBSD expects an integer argument for DIOCCACHESYNC.
+       * 1 = Force flush
+       */
+      ret = rump_sys_ioctl (bd->rump_fd, DIOCCACHESYNC, &force);
+
+      if (ret < 0)
+      {
+	/* rump_errno2host handles the translation */
+	return rump_errno2host (errno);
+      }
       return D_SUCCESS;
     default:
       return D_INVALID_OPERATION;

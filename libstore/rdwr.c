@@ -296,3 +296,12 @@ store_set_size (struct store *store, size_t newsize)
 
   return err;
 }
+
+/* Ensure all writes to STORE are on permanent storage. */
+error_t
+store_sync (struct store *store)
+{
+  if (store->class->sync)
+    return (*store->class->sync) (store);
+  return EOPNOTSUPP;
+}

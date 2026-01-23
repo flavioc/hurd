@@ -207,6 +207,9 @@ struct store_class
 
   /* Return a memory object paging on STORE.  */
   error_t (*map) (const struct store *store, vm_prot_t prot, mach_port_t *memobj);
+
+  /* Sync any cached writes to permanent storage. */
+  error_t (*sync) (struct store *store);
 };
 
 /* Return a new store in STORE, which refers to the storage underlying
@@ -318,6 +321,9 @@ error_t store_read (struct store *store,
 
 /* Set STORE's size to NEWSIZE (in bytes).  */
 error_t store_set_size (struct store *store, size_t newsize);
+
+/* Ensure all writes to STORE are on permanent storage. */
+error_t store_sync (struct store *store);
 
 /* If STORE was created using store_create, remove the reference to the
    source from which it was created.  */
