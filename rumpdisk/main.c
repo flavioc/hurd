@@ -40,6 +40,15 @@
 
 mach_port_t bootstrap_resume_task = MACH_PORT_NULL;
 
+static pthread_once_t rump_hw_initialized = PTHREAD_ONCE_INIT;
+
+static void
+do_rump_hw_init (void)
+{
+  mach_print("rumpdisk: Initializing Rump block device layer...\n");
+  rump_register_block ();
+}
+
 static const struct argp_option options[] = {
   {"host-priv-port",	'h', "PORT", 0, "Host private port PORT"},
   {"device-master-port",'d', "PORT", 0, "Device master port PORT"},
@@ -102,6 +111,7 @@ static const struct argp *rumpdisk_argp_bootup = &rumpdisk_argp;
 static int __thread wired = 0;
 static int rumpdisk_demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
+  pthread_once (&rump_hw_initialized, do_rump_hw_init);
   /* FIXME: we are not wired while receiving our first message.  */
   if (!wired)
     {
@@ -150,7 +160,6 @@ main (int argc, char **argv)
       error(1, err, "Missing parameters for bootstrap");
     }
 
-  rump_register_block ();
   machdev_trivfs_init (argc, argv, bootstrap_resume_task, RUMPNAME, "/dev/" RUMPNAME, &bootstrap);
 
   /* Make sure we will not swap out, in case we drive the disk used for
@@ -161,6 +170,9 @@ main (int argc, char **argv)
   err = thread_wire (_hurd_host_priv, mach_thread_self (), TRUE);
   if (err != KERN_SUCCESS)
     error (1, err, "cannot get vm_privilege");
+
+  if (bootstrap_resume_task != MACH_PORT_NULL)
+    pthread_once (&rump_hw_initialized, do_rump_hw_init);
 
   machdev_device_init ();
   err = pthread_create (&t, NULL, rumpdisk_multithread_server, NULL);
