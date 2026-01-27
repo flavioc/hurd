@@ -220,7 +220,13 @@ diskfs_set_hypermetadata (int wait, int clean)
    }
 
   sync_global (wait);
-
+  if (wait)
+    {
+      error_t err = store_sync (store);
+      /* Ignore EOPNOTSUPP (legacy drivers), but warn on real I/O errors */
+      if (err && err != EOPNOTSUPP)
+        ext2_warning ("device flush failed: %s", strerror (err));
+    }
   return 0;
 }
 

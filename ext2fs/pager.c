@@ -1575,7 +1575,7 @@ diskfs_shutdown_pager (void)
 
   /* Sync everything on the the disk pager.  */
   sync_global (1);
-
+  store_sync (store);
   /* Despite the name of this function, we never actually shutdown the disk
      pager, just make sure it's synced. */
 }
@@ -1596,6 +1596,13 @@ diskfs_sync_everything (int wait)
 
   /* Do things on the the disk pager.  */
   sync_global (wait);
+  if (wait)
+    {
+      error_t err = store_sync (store);
+      /* Ignore EOPNOTSUPP (drivers), but warn on real I/O errors */
+      if (err && err != EOPNOTSUPP)
+        ext2_warning ("device flush failed: %s", strerror (err));
+    }
 }
 
 static void
