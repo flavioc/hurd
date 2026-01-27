@@ -77,6 +77,12 @@ file_write (struct store *store,
 }
 
 static error_t
+file_store_sync (struct store *store)
+{
+  return file_sync (store->port, 1, 0);
+}
+
+static error_t
 file_store_set_size (struct store *store, size_t newsize)
 {
   error_t err;
@@ -225,7 +231,8 @@ store_file_class =
 {
   STORAGE_HURD_FILE, "file", file_read, file_write, file_store_set_size,
   store_std_leaf_allocate_encoding, store_std_leaf_encode, file_decode,
-  file_set_flags, file_clear_flags, 0, 0, 0, file_open, 0, file_map
+  file_set_flags, file_clear_flags, 0, 0, 0, file_open, 0, file_map,
+  file_store_sync
 };
 STORE_STD_CLASS (file);
 

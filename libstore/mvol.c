@@ -71,6 +71,25 @@ mvol_write (struct store *store,
 }
 
 static error_t
+mvol_sync (struct store *store)
+{
+  size_t i;
+  error_t err = 0;
+
+  /* We iterate through all known volumes to ensure
+    even inactive volumes are flushed to disk. */
+  for (i = 0; i < store->num_children; i++)
+    {
+      error_t e = store_sync (store->children[i]);
+      /* If any child fails, we record the error but continue
+	syncing the others to maximize data safety. */
+      if (e)
+	err = e;
+    }
+  return err;
+}
+
+static error_t
 mvol_set_size (struct store *store, size_t newsize)
 {
   return EOPNOTSUPP;
@@ -89,7 +108,8 @@ store_mvol_class =
 {
   -1, "mvol", mvol_read, mvol_write, mvol_set_size,
   0, 0, 0,
-  store_set_child_flags, store_clear_child_flags, 0, 0, mvol_remap
+  store_set_child_flags, store_clear_child_flags, 0, 0, mvol_remap,
+  0, 0, 0, mvol_sync
 };
 STORE_STD_CLASS (mvol);
 
