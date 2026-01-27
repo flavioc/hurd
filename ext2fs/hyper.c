@@ -133,8 +133,9 @@ get_hypermetadata (void)
 			features);
 	  diskfs_readonly = 1;
 	}
-      if (le16toh (sblock->s_inode_size) != EXT2_GOOD_OLD_INODE_SIZE)
-	ext2_panic ("inode size %d isn't supported, only %d is supported", le16toh (sblock->s_inode_size), EXT2_GOOD_OLD_INODE_SIZE);
+      uint16_t inode_size = le16toh (sblock->s_inode_size);
+      if (inode_size < EXT2_GOOD_OLD_INODE_SIZE || (inode_size & (inode_size - 1)) != 0)
+	ext2_panic ("inode size %d isn't supported", inode_size);
       if (EXT2_HAS_COMPAT_FEATURE (sblock, EXT3_FEATURE_COMPAT_HAS_JOURNAL))
         ext2_warning ("mounting ext3 filesystem as ext2");
     }
@@ -181,6 +182,11 @@ map_hypermetadata (void)
      These are stored in the filesystem blocks following the superblock.  */
   group_desc_image =
     (struct ext2_group_desc *) bptr (group_desc_block);
+
+  global_inode_size = le16toh (sblock->s_inode_size);
+
+  if (global_inode_size == 0)
+    global_inode_size = EXT2_GOOD_OLD_INODE_SIZE;
 }
 
 error_t

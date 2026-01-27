@@ -106,6 +106,36 @@ diskfs_new_hardrefs (struct node *np)
 {
   allow_pager_softrefs (np);
 }
+
+static inline void
+ext2_decode_extra_time (uint32_t legacy_sec, uint32_t extra,
+                        time_t *sec, long *nsec)
+{
+  /* Epoch extension (bits 32 and 33) */
+  *sec = (time_t)legacy_sec + (((time_t)extra & 0x3) << 32);
+  /* Nanoseconds (bits 2 through 31) */
+  *nsec = (long)(extra >> 2);
+}
+
+static inline uint32_t
+ext2_encode_extra_time (time_t sec, long nsec)
+{
+  uint32_t extra;
+  /* Pack nanoseconds into the upper 30 bits */
+  extra = (uint32_t)(nsec << 2);
+  /* Pack bits 32 and 33 of seconds into the lower 2 bits */
+  extra |= (uint32_t)((sec >> 32) & 0x3);
+  return extra;
+}
+
+/* Helper to check if the current filesystem supports extended inodes */
+static inline int
+ext2_has_extra_inodes (struct ext2_super_block *sb)
+{
+  return (le32toh (sb->s_rev_level) > EXT2_GOOD_OLD_REV
+          && le16toh (sb->s_inode_size) > EXT2_GOOD_OLD_INODE_SIZE);
+}
+
 
 /* The user must define this function if she wants to use the node
    cache.  Read stat information out of the on-disk node.  */
@@ -136,23 +166,29 @@ diskfs_user_read_node (struct node *np, struct lookup_context *ctx)
   st->st_gen = le32toh (di->i_generation);
 
   st->st_atim.tv_sec = le32toh (di->i_atime);
-#ifdef not_yet
-  /* ``struct ext2_inode'' doesn't do better than sec. precision yet.  */
-#else
-  st->st_atim.tv_nsec = 0;
-#endif
   st->st_mtim.tv_sec = le32toh (di->i_mtime);
-#ifdef not_yet
-  /* ``struct ext2_inode'' doesn't do better than sec. precision yet.  */
-#else
-  st->st_mtim.tv_nsec = 0;
-#endif
   st->st_ctim.tv_sec = le32toh (di->i_ctime);
-#ifdef not_yet
-  /* ``struct ext2_inode'' doesn't do better than sec. precision yet.  */
-#else
-  st->st_ctim.tv_nsec = 0;
-#endif
+  st->st_atim.tv_nsec = st->st_mtim.tv_nsec = st->st_ctim.tv_nsec = 0;
+  if (ext2_has_extra_inodes (sblock))
+    {
+      struct ext2_inode_extra *di_extra =
+	  (struct ext2_inode_extra *) ((char *) di + EXT2_GOOD_OLD_INODE_SIZE);
+
+      /* Only decode if the inode actually uses the extra space (i_extra_isize)
+	 The i_extra_isize tells us how many extra bytes are used in THIS inode. */
+      if (le16toh (di_extra->i_extra_isize) >= EXT2_INODE_EXTRA_TIME_SIZE)
+	{
+	  ext2_decode_extra_time (le32toh (di->i_atime),
+                                  le32toh (di_extra->i_atime_extra),
+                                  &st->st_atim.tv_sec, &st->st_atim.tv_nsec);
+          ext2_decode_extra_time (le32toh (di->i_ctime),
+                                  le32toh (di_extra->i_ctime_extra),
+                                  &st->st_ctim.tv_sec, &st->st_ctim.tv_nsec);
+          ext2_decode_extra_time (le32toh (di->i_mtime),
+                                  le32toh (di_extra->i_mtime_extra),
+                                  &st->st_mtim.tv_sec, &st->st_mtim.tv_nsec);
+        }
+    }
 
   st->st_blocks = le32toh (di->i_blocks);
 
@@ -416,19 +452,24 @@ write_node (struct node *np)
       di->i_links_count = htole16 (st->st_nlink);
 
       di->i_atime = htole32(st->st_atim.tv_sec);
-#ifdef not_yet
-      /* ``struct ext2_inode'' doesn't do better than sec. precision yet.  */
-      di->i_atime.tv_nsec = htole32 (st->st_atim.tv_nsec);
-#endif
       di->i_mtime = htole32 (st->st_mtim.tv_sec);
-#ifdef not_yet
-      di->i_mtime.tv_nsec = htole32 (st->st_mtim.tv_nsec);
-#endif
       di->i_ctime = htole32 (st->st_ctim.tv_sec);
-#ifdef not_yet
-      di->i_ctime.tv_nsec = htole32 (st->st_ctim.tv_nsec);
-#endif
+      if (ext2_has_extra_inodes (sblock))
+	{
+	  struct ext2_inode_extra *di_extra =
+	      (struct ext2_inode_extra *) ((char *) di + EXT2_GOOD_OLD_INODE_SIZE);
 
+          if (le16toh (di_extra->i_extra_isize) < EXT2_INODE_EXTRA_TIME_SIZE)
+            di_extra->i_extra_isize = htole16 (EXT2_INODE_EXTRA_TIME_SIZE);
+
+          di_extra->i_checksum_hi = 0;
+	  di_extra->i_atime_extra = htole32 (ext2_encode_extra_time (st->st_atim.tv_sec,
+                                                                    st->st_atim.tv_nsec));
+	  di_extra->i_mtime_extra = htole32 (ext2_encode_extra_time (st->st_mtim.tv_sec,
+                                                                    st->st_mtim.tv_nsec));
+	  di_extra->i_ctime_extra = htole32 (ext2_encode_extra_time (st->st_ctim.tv_sec,
+                                                                    st->st_ctim.tv_nsec));
+	}
       /* Convert generic flags in ST->st_flags to ext2-specific flags in DI
          (but don't mess with ext2 flags we don't know about).  The original
 	 set was copied from DI into INFO by read_node, but might have been

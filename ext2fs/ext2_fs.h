@@ -278,6 +278,18 @@ struct ext2_inode {
 	} osd2;				/* OS dependent 2 */
 };
 
+struct ext2_inode_extra {
+	__u16 i_extra_isize;   /* Size of this extra record */
+	__u16 i_checksum_hi;   /* Upper 16-bits of inode checksum */
+	__u32 i_ctime_extra;   /* Extra ctime bits (nanos + epoch) */
+	__u32 i_mtime_extra;   /* Extra mtime bits (nanos + epoch) */
+	__u32 i_atime_extra;   /* Extra atime bits (nanos + epoch) */
+	__u32 i_crtime;        /* File creation time (Birth time) */
+	__u32 i_crtime_extra;  /* Extra crtime bits */
+	__u32 i_version_hi;    /* High 32 bits of 64-bit version */
+	__u32 i_projid;        /* Project ID */
+};
+
 #define i_size_high	i_dir_acl
 
 #define i_translator	osd1.hurd1.h_i_translator
@@ -425,10 +437,16 @@ struct ext2_super_block {
 #define EXT2_GOOD_OLD_REV	0	/* The good old (original) format */
 #define EXT2_DYNAMIC_REV	1 	/* V2 format w/ dynamic inode sizes */
 
-#define EXT2_CURRENT_REV	EXT2_GOOD_OLD_REV
+#define EXT2_CURRENT_REV	EXT2_DYNAMIC_REV
 #define EXT2_MAX_SUPP_REV	EXT2_DYNAMIC_REV
 
 #define EXT2_GOOD_OLD_INODE_SIZE 128
+/*
+ * We need enough space for ctime, mtime, atime and extra fields.
+ * i_crtime follows immediately after i_atime_extra, so its offset
+ * gives us the total size required for the timestamps we support.
+ */
+#define EXT2_INODE_EXTRA_TIME_SIZE offsetof (struct ext2_inode_extra, i_crtime)
 
 /*
  * Feature set definitions

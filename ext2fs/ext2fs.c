@@ -62,6 +62,7 @@ pthread_spinlock_t modified_global_blocks_lock = PTHREAD_SPINLOCK_INITIALIZER;
 
 struct ext2_super_block *sblock;
 int sblock_dirty;
+uint16_t global_inode_size;
 
 unsigned int block_size;
 unsigned int log2_block_size;

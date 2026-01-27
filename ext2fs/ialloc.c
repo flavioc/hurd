@@ -278,7 +278,7 @@ repeat:
      fields.  */
   {
     struct ext2_inode *di = dino_ref (inum);
-    memset (di, 0, sizeof *di);
+    memset (di, 0, EXT2_INODE_SIZE (sblock));
     dino_deref (di);
   }
 

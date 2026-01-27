@@ -281,6 +281,8 @@ int disk_cache_block_is_ref (block_t block);
 extern struct ext2_super_block *sblock;
 /* True if sblock has been modified.  */
 extern int sblock_dirty;
+/* Size of one inode. */
+extern uint16_t global_inode_size;
 
 /* Where the super-block is located on disk (at min-block 1).  */
 #define SBLOCK_BLOCK	1	/* Default location, second 1k block.  */
@@ -428,10 +430,9 @@ dino_ref (ino_t inum)
   unsigned long group_inum = (inum - 1) % inodes_per_group;
   struct ext2_group_desc *bg = group_desc (bg_num);
   block_t block = le32toh (bg->bg_inode_table) + (group_inum / inodes_per_block);
-  struct ext2_inode *inode = disk_cache_block_ref (block);
-  inode += group_inum % inodes_per_block;
-  ext2_debug ("(%llu) = %p", inum, inode);
-  return inode;
+  void *block_ptr = disk_cache_block_ref (block);
+  size_t offset = (group_inum % inodes_per_block) * global_inode_size;
+  return (struct ext2_inode *)((char *)block_ptr + offset);
 }
 
 EXT2FS_EI void
