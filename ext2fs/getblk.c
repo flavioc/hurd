@@ -234,7 +234,14 @@ block_getblk (struct node *node, block_t block, int nr, int create, int zero,
   bh[nr] = *result;
 
   if (diskfs_synchronous || diskfs_node_disknode (node)->info.i_osync)
-    sync_global_ptr (bh, 1);
+    {
+      sync_global_ptr (bh, 1);
+      /* We just wrote a new indirect block pointer.
+         If this doesn't hit the platter, the file is corrupt. */
+      error_t err = store_sync (store);
+      if (err && err != EOPNOTSUPP)
+	ext2_warning ("indirect block flush failed: %s", strerror (err));
+    }
   else
     record_indir_poke (node, bh);
 

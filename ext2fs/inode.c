@@ -569,7 +569,12 @@ diskfs_write_disknode (struct node *np, int wait)
   if (di)
     {
       if (wait)
-	sync_global_ptr (di, 1);
+        {
+	  sync_global_ptr (di, 1);
+          error_t err = store_sync (store);
+          if (err && err != EOPNOTSUPP)
+            ext2_warning ("inode flush failed: %s", strerror (err));
+        }
       else
 	record_global_poke (di);
     }
