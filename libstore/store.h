@@ -705,7 +705,7 @@ error_t store_return (const struct store *store,
 /* Encode STORE into ENC, which should have been prepared with
    store_enc_init, or return an error.  The contents of ENC may then be
    return as the value of file_get_storage_info; if for some reason this
-   can't be done, store_enc_dealloc may be used to deallocate the mmemory
+   can't be done, store_enc_dealloc may be used to deallocate the memory
    used by the unsent vectors.  */
 error_t store_encode (const struct store *store, struct store_enc *enc);
 
