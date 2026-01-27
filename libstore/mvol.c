@@ -106,10 +106,15 @@ mvol_remap (struct store *source,
 const struct store_class
 store_mvol_class =
 {
-  -1, "mvol", mvol_read, mvol_write, mvol_set_size,
-  0, 0, 0,
-  store_set_child_flags, store_clear_child_flags, 0, 0, mvol_remap,
-  0, 0, 0, mvol_sync
+  .id = -1,
+  .name = "mvol",
+  .read = mvol_read,
+  .write = mvol_write,
+  .set_size = mvol_set_size,
+  .set_flags = store_set_child_flags,
+  .clear_flags = store_clear_child_flags,
+  .remap = mvol_remap,
+  .sync = mvol_sync,
 };
 STORE_STD_CLASS (mvol);
 

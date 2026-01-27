@@ -129,10 +129,18 @@ ileave_decode (struct store_enc *enc, const struct store_class *const *classes,
 const struct store_class
 store_ileave_class =
 {
-  STORAGE_INTERLEAVE, "interleave", stripe_read, stripe_write, stripe_set_size,
-  ileave_allocate_encoding, ileave_encode, ileave_decode,
-  store_set_child_flags, store_clear_child_flags, 0, 0, stripe_remap,
-  0, 0, 0, stripe_sync
+  .id = STORAGE_INTERLEAVE,
+  .name = "interleave",
+  .read = stripe_read,
+  .write = stripe_write,
+  .set_size = stripe_set_size,
+  .allocate_encoding = ileave_allocate_encoding,
+  .encode = ileave_encode,
+  .decode = ileave_decode,
+  .set_flags = store_set_child_flags,
+  .clear_flags = store_clear_child_flags,
+  .remap = stripe_remap,
+  .sync = stripe_sync,
 };
 STORE_STD_CLASS (ileave);
 
