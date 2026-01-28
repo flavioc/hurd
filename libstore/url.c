@@ -85,8 +85,9 @@ store_url_decode (struct store_enc *enc,
 
 const struct store_class store_url_open_class =
 {
-  STORAGE_NETWORK, "url",
-  open: store_url_open,
-  decode: store_url_decode
+  .id = STORAGE_NETWORK,
+  .name = "url",
+  .open = store_url_open,
+  .decode = store_url_decode
 };
 STORE_STD_CLASS (url_open);

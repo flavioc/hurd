@@ -173,5 +173,5 @@ store_typed_open (const char *name, int flags,
 }
 
 const struct store_class
-store_typed_open_class = { -1, "typed", open: store_typed_open };
+store_typed_open_class = { .id = -1, .name = "typed", .open = store_typed_open };
 STORE_STD_CLASS (typed_open);

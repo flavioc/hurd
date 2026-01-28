@@ -140,9 +140,17 @@ task_clear_flags (struct store *store, int flags)
 const struct store_class
 store_task_class =
 {
-  STORAGE_TASK, "task", task_read, task_write, task_set_size,
-  store_std_leaf_allocate_encoding, store_std_leaf_encode, task_decode,
-  task_set_flags, task_clear_flags, 0, 0, 0, task_open
+  .id = STORAGE_TASK,
+  .name = "task",
+  .read = task_read,
+  .write = task_write,
+  .set_size = task_set_size,
+  .allocate_encoding = store_std_leaf_allocate_encoding,
+  .encode = store_std_leaf_encode,
+  .decode = task_decode,
+  .set_flags = task_set_flags,
+  .clear_flags = task_clear_flags,
+  .open = task_open,
 };
 STORE_STD_CLASS (task);
 

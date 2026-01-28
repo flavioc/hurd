@@ -117,7 +117,7 @@ store_module_open (const char *name, int flags,
 }
 
 const struct store_class store_module_open_class =
-{ -1, "module", open: store_module_open };
+{ .id = -1, .name = "module", .open = store_module_open };
 STORE_STD_CLASS (module_open);
 
 error_t

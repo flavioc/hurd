@@ -205,5 +205,5 @@ store_part_open (const char *name, int flags,
 }
 
 const struct store_class
-store_part_class = { -1, "part", open: store_part_open };
+store_part_class = { .id = -1, .name = "part", .open = store_part_open };
 STORE_STD_CLASS (part);

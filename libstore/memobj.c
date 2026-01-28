@@ -192,13 +192,14 @@ memobj_decode (struct store_enc *enc, const struct store_class *const *classes,
 const struct store_class
 store_memobj_class =
 {
-  STORAGE_MEMORY, "memobj",
-  map: memobj_map,
-  read: memobj_read,
-  set_size: memobj_set_size,
-  write: memobj_write,
-  allocate_encoding: store_std_leaf_allocate_encoding,
-  encode: store_std_leaf_encode,
-  decode: memobj_decode,
+  .id = STORAGE_MEMORY,
+  .name = "memobj",
+  .map = memobj_map,
+  .read = memobj_read,
+  .set_size = memobj_set_size,
+  .write = memobj_write,
+  .allocate_encoding = store_std_leaf_allocate_encoding,
+  .encode = store_std_leaf_encode,
+  .decode = memobj_decode,
 };
 STORE_STD_CLASS (memobj);

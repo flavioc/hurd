@@ -476,16 +476,18 @@ nbd_clear_flags (struct store *store, int flags)
 
 const struct store_class store_nbd_class =
 {
-  STORAGE_NETWORK, "nbd",
-  open: nbd_open,
-  validate_name: nbd_validate_name,
-  read: nbd_read,
-  write: nbd_write,
-  set_size: nbd_set_size,
-  allocate_encoding: store_std_leaf_allocate_encoding,
-  encode: store_std_leaf_encode,
-  decode: nbd_decode,
-  set_flags: nbd_set_flags, clear_flags: nbd_clear_flags,
+  .id = STORAGE_NETWORK,
+  .name = "nbd",
+  .open = nbd_open,
+  .validate_name = nbd_validate_name,
+  .read = nbd_read,
+  .write = nbd_write,
+  .set_size = nbd_set_size,
+  .allocate_encoding = store_std_leaf_allocate_encoding,
+  .encode = store_std_leaf_encode,
+  .decode = nbd_decode,
+  .set_flags = nbd_set_flags,
+  .clear_flags = nbd_clear_flags,
 };
 STORE_STD_CLASS (nbd);
 

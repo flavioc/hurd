@@ -170,9 +170,19 @@ copy_clone (const struct store *from, struct store *to)
 const struct store_class
 store_copy_class =
 {
-  STORAGE_COPY, "copy", copy_read, copy_write, copy_set_size,
-  copy_allocate_encoding, copy_encode, copy_decode,
-  copy_set_flags, copy_clear_flags, copy_cleanup, copy_clone, 0, copy_open
+  .id = STORAGE_COPY,
+  .name = "copy",
+  .read = copy_read,
+  .write = copy_write,
+  .set_size = copy_set_size,
+  .allocate_encoding = copy_allocate_encoding,
+  .encode = copy_encode,
+  .decode = copy_decode,
+  .set_flags = copy_set_flags,
+  .clear_flags = copy_clear_flags,
+  .cleanup = copy_cleanup,
+  .clone = copy_clone,
+  .open = copy_open,
 };
 STORE_STD_CLASS (copy);
 

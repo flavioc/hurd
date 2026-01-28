@@ -181,10 +181,18 @@ zero_map (const struct store *store, vm_prot_t prot, mach_port_t *memobj)
 const struct store_class
 store_zero_class =
 {
-  STORAGE_ZERO, "zero", zero_read, zero_write, zero_set_size,
-  zero_allocate_encoding, zero_encode, zero_decode,
-  0, 0, 0, 0, zero_remap, zero_open, zero_validate_name,
-  zero_map
+  .id = STORAGE_ZERO,
+  .name = "zero",
+  .read = zero_read,
+  .write = zero_write,
+  .set_size = zero_set_size,
+  .allocate_encoding = zero_allocate_encoding,
+  .encode = zero_encode,
+  .decode = zero_decode,
+  .remap = zero_remap,
+  .open = zero_open,
+  .validate_name = zero_validate_name,
+  .map = zero_map,
 };
 STORE_STD_CLASS (zero);
 

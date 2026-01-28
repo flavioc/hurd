@@ -263,5 +263,5 @@ STORE_UNZIP(open) (const char *name, int flags,
 }
 
 const struct store_class STORE_UNZIP(class) =
-{ -1, STRINGIFY(UNZIP), open: STORE_UNZIP(open) };
+{ .id = -1, .name = STRINGIFY(UNZIP), .open = STORE_UNZIP(open) };
 STORE_STD_CLASS_1 (UNZIP);

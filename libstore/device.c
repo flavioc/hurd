@@ -326,9 +326,19 @@ dev_map (const struct store *store, vm_prot_t prot, mach_port_t *memobj)
 const struct store_class
 store_device_class =
 {
-  STORAGE_DEVICE, "device", dev_read, dev_write, dev_set_size,
-  store_std_leaf_allocate_encoding, store_std_leaf_encode, dev_decode,
-  dev_set_flags, dev_clear_flags, 0, 0, 0, dev_open, 0, dev_map, dev_sync
+  .id = STORAGE_DEVICE,
+  .name = "device",
+  .read = dev_read,
+  .write = dev_write,
+  .set_size = dev_set_size,
+  .allocate_encoding = store_std_leaf_allocate_encoding,
+  .encode = store_std_leaf_encode,
+  .decode = dev_decode,
+  .set_flags = dev_set_flags,
+  .clear_flags = dev_clear_flags,
+  .open = dev_open,
+  .map = dev_map,
+  .sync = dev_sync,
 };
 STORE_STD_CLASS (device);
 
