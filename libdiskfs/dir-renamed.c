@@ -122,7 +122,12 @@ diskfs_rename_dir (struct node *fdp, struct node *fnp, const char *fromname,
     diskfs_nrele (tmpnp);
   diskfs_drop_dirstat (fdp, tmpds);
   if (err)
-    goto out;
+    {
+      assert_backtrace (!tmpnp);
+      /* diskfs_lookup has not locked fnp then, do not unlock it. */
+      fnp = NULL;
+      goto out;
+    }
 
   if (tnp)
     {
