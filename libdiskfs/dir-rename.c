@@ -188,12 +188,18 @@ diskfs_S_dir_rename (struct protid *fromcred,
     diskfs_node_update (tdp, 1);
 
   pthread_mutex_unlock (&tdp->lock);
-  pthread_mutex_unlock (&fnp->lock);
   if (err)
     {
-      diskfs_nrele (fnp);
+      assert_backtrace (fnp->dn_stat.st_nlink > 0);
+      fnp->dn_stat.st_nlink--;
+      fnp->dn_set_ctime = 1;
+      if (diskfs_synchronous)
+	diskfs_node_update (fnp, 1);
+      diskfs_drop_dirstat (tdp, ds);
+      diskfs_nput (fnp);
       return err;
     }
+  pthread_mutex_unlock (&fnp->lock);
 
   /* We now hold no locks */
 

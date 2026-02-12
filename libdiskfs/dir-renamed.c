@@ -159,6 +159,11 @@ diskfs_rename_dir (struct node *fdp, struct node *fnp, const char *fromname,
       assert_backtrace (err != ENOENT);
       if (err)
 	{
+	  assert_backtrace (tdp->dn_stat.st_nlink > 0);
+	  tdp->dn_stat.st_nlink--;
+	  tdp->dn_set_ctime = 1;
+	  if (diskfs_synchronous)
+	    diskfs_node_update (tdp, 1);
 	  diskfs_drop_dirstat (fnp, tmpds);
 	  goto out;
 	}
@@ -168,7 +173,14 @@ diskfs_rename_dir (struct node *fdp, struct node *fnp, const char *fromname,
       if (diskfs_synchronous)
 	diskfs_file_update (fnp, 1);
       if (err)
-	goto out;
+	{
+	  assert_backtrace (tdp->dn_stat.st_nlink > 0);
+	  tdp->dn_stat.st_nlink--;
+	  tdp->dn_set_ctime = 1;
+	  if (diskfs_synchronous)
+	    diskfs_node_update (tdp, 1);
+	  goto out;
+	}
 
       fdp->dn_stat.st_nlink--;
       fdp->dn_set_ctime = 1;
@@ -213,7 +225,14 @@ diskfs_rename_dir (struct node *fdp, struct node *fnp, const char *fromname,
     }
 
   if (err)
-    goto out;
+    {
+      assert_backtrace (fnp->dn_stat.st_nlink > 0);
+      fnp->dn_stat.st_nlink--;
+      fnp->dn_set_ctime = 1;
+      if (diskfs_synchronous)
+	diskfs_node_update (fnp, 1);
+      goto out;
+    }
 
   /* 4: Remove the entry in fdp. */
   ds = buf;
