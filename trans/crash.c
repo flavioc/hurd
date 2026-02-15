@@ -318,9 +318,13 @@ S_crash_dump_task (mach_port_t port,
 	      proc_mark_stop (user_proc, signo, sigcode);
 
 	      c->task = task;
-	      task = MACH_PORT_NULL;
 	      c->core_file = core_file;
+
+	      /* Keep references.  */
+	      task = MACH_PORT_NULL;
 	      core_file = MACH_PORT_NULL;
+	      user_proc = MACH_PORT_NULL;
+
 	      c->core_limit = (off_t) -1; /* XXX should core limit in RPC */
 	      c->signo = signo;
 	      c->sigcode = sigcode;
