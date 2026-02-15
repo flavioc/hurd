@@ -557,7 +557,6 @@ dead_crasher (void *ptr)
   mach_port_deallocate (mach_task_self (), c->sidport);
   mach_port_deallocate (mach_task_self (), c->task);
   mach_port_deallocate (mach_task_self (), c->core_file);
-  mach_port_deallocate (mach_task_self (), c->sidport);
 
   /* The port data structures are cleaned up when we return.  */
 
