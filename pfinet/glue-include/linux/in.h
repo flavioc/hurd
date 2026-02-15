@@ -2,6 +2,7 @@
 #define _HACK_IN_H_
 
 #include <netinet/in.h>
+#include <linux/socket.h>
 
 /* IP_MTU_DISCOVER values */
 #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
@@ -12,7 +13,8 @@
 #define IP_DEFAULT_MULTICAST_TTL        1
 #define IP_DEFAULT_MULTICAST_LOOP       1
 
-#ifndef IP_PKTINFO
+#if IP_PKTINFO == 190
+/* Linux-like value, define Linux struct */
 struct in_pktinfo
 {
 	int		ipi_ifindex;
