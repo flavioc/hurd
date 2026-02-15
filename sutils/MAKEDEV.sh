@@ -183,11 +183,11 @@ mkdev() {
 
       rumpdisk)
 	st $I root 660 c /hurd/rumpdisk
-	cmd ln -f -s rumpdisk disk
+	st disk root 660 c /hurd/symlink rumpdisk
 	;;
       rumpusbdisk)
 	st $I root 660 c /hurd/rumpusbdisk
-	cmd ln -f -s rumpusbdisk usbdisk
+	st usbdisk root 660 c /hurd/symlink rumpusbdisk
 	;;
       [hrscwu]d*|ucd*)
 	local sliceno=
