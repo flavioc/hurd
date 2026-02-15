@@ -97,6 +97,11 @@ fetch_thread_fpregset (thread_t thread, prfpregset_t *fpregs)
   struct i386_float_state st;
   mach_msg_type_number_t count = i386_FLOAT_STATE_COUNT;
 
+  if (!*fpregs)
+    /* FIXME: having a pointer here is bogus actually, prfpregset_t should be a
+       struct, not a pointer, like on i386.  This needs to be fixed in glibc
+       etc.  */
+    return;
   memset (*fpregs, 0, sizeof (**fpregs));
 
   err = thread_get_state (thread, i386_FLOAT_STATE,
