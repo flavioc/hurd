@@ -34,7 +34,9 @@
 #define SOL_RAW IPPROTO_RAW
 
 /* IP options */
+#ifndef IP_PKTINFO
 #define IP_PKTINFO	190
+#endif
 #define IP_PKTOPTIONS	191
 #define IP_MTU_DISCOVER	192
 #define IP_RECVERR	193

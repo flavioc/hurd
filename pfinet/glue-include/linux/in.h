@@ -12,12 +12,14 @@
 #define IP_DEFAULT_MULTICAST_TTL        1
 #define IP_DEFAULT_MULTICAST_LOOP       1
 
+#ifndef IP_PKTINFO
 struct in_pktinfo
 {
 	int		ipi_ifindex;
 	struct in_addr	ipi_spec_dst;
 	struct in_addr	ipi_addr;
 };
+#endif
 
 
 /* <asm/byteorder.h> contains the htonl type stuff.. */
