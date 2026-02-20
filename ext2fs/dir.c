@@ -860,6 +860,9 @@ count_dirents (struct node *dp, block_t nb, char *buf)
       entry = (struct ext2_dir_entry_2 *) offinblk;
       if (le32toh (entry->inode))
 	count++;
+
+      if (le16toh (entry->rec_len) == 0)
+	return EIO;
     }
 
   assert_backtrace (diskfs_node_disknode (dp)->dirents[nb] == -1
