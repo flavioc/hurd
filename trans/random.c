@@ -357,7 +357,6 @@ trivfs_S_io_read (struct trivfs_protid *cred,
     }
 
   *data_len = amount;
-  trivfs_set_atime (fsys);
   return 0;
 
  errout:
@@ -390,7 +389,6 @@ trivfs_S_io_write (struct trivfs_protid *cred,
 
   pool_add_entropy (data, datalen);
   *amount = datalen;
-  trivfs_set_mtime (fsys);
   return 0;
 }
 
