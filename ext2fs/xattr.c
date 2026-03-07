@@ -419,8 +419,8 @@ xattr_entry_replace (struct ext2_xattr_header *header,
 static int
 xattr_header_valid(struct ext2_xattr_header *header)
 {
-  return header->h_magic != htole32 (EXT2_XATTR_BLOCK_MAGIC)
-    || header->h_blocks != htole32 (1);
+  return header->h_magic == htole32 (EXT2_XATTR_BLOCK_MAGIC)
+    && header->h_blocks == htole32 (1);
 }
 
 
@@ -460,7 +460,7 @@ ext2_free_xattr_block (struct node *np)
   block = disk_cache_block_ref (blkno);
   header = EXT2_XATTR_HEADER (block);
 
-  if (xattr_header_valid(header))
+  if (!xattr_header_valid(header))
     {
       ext2_warning ("Invalid extended attribute block.");
       err = EIO;
@@ -545,7 +545,7 @@ ext2_list_xattr (struct node *np, char *buffer, size_t *len)
   block = disk_cache_block_ref (blkno);
 
   header = EXT2_XATTR_HEADER (block);
-  if (xattr_header_valid(header))
+  if (!xattr_header_valid(header))
     {
       ext2_warning ("Invalid extended attribute block.");
       err = EIO;
@@ -619,7 +619,7 @@ ext2_get_xattr (struct node *np, const char *name, char *value, size_t *len)
   dino_deref (ei);
 
   header = EXT2_XATTR_HEADER (block);
-  if (xattr_header_valid(header))
+  if (!xattr_header_valid(header))
     {
       ext2_warning ("Invalid extended attribute block.");
       err = EIO;
@@ -731,7 +731,7 @@ ext2_set_xattr (struct node *np, const char *name, const char *value,
     {
       block = disk_cache_block_ref (blkno);
       header = EXT2_XATTR_HEADER (block);
-      if (xattr_header_valid(header))
+      if (!xattr_header_valid(header))
 	{
 	  ext2_warning ("Invalid extended attribute block.");
 	  err = EIO;
