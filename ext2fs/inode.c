@@ -621,6 +621,7 @@ diskfs_set_translator (struct node *np, const char *name, mach_msg_type_number_t
       && use_xattr_translator_records)
     {
       daddr_t blkno;
+      void *block;
       struct ext2_inode *di;
 
       di = dino_ref (np->cache_id);
@@ -635,6 +636,10 @@ diskfs_set_translator (struct node *np, const char *name, mach_msg_type_number_t
 	  di->i_translator = htole32 (0);
 	  diskfs_node_disknode (np)->info_i_translator = 0;
 	  record_global_poke (di);
+
+	  /* Flush any pending write before releasing.  */
+	  block = disk_cache_block_ref (blkno);
+	  flush_global_ptr (block, 1);
 	  ext2_free_blocks (blkno, 1);
 
 	  np->dn_stat.st_blocks -= 1 << log2_stat_blocks_per_fs_block;
@@ -676,6 +681,7 @@ diskfs_set_translator (struct node *np, const char *name, mach_msg_type_number_t
     {
       /* Use legacy translator record when xattr is not supported */
       daddr_t blkno;
+      void *block;
       struct ext2_inode *di;
       char buf[block_size];
 
@@ -738,6 +744,10 @@ diskfs_set_translator (struct node *np, const char *name, mach_msg_type_number_t
 	  di->i_translator = htole32 (0);
 	  diskfs_node_disknode (np)->info_i_translator = 0;
 	  record_global_poke (di);
+
+	  /* Flush any pending write before releasing.  */
+	  block = disk_cache_block_ref (blkno);
+	  flush_global_ptr (block, 1);
 	  ext2_free_blocks (blkno, 1);
 
 	  np->dn_stat.st_blocks -= 1 << log2_stat_blocks_per_fs_block;

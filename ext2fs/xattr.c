@@ -471,8 +471,10 @@ ext2_free_xattr_block (struct node *np)
     {
        ext2_debug("free block %d", blkno);
 
-       disk_cache_block_deref (block);
-       ext2_free_blocks(blkno, 1);
+       /* Flush any pending write before releasing.  */
+       flush_global_ptr (block, 1);
+
+       ext2_free_blocks (blkno, 1);
 
        np->dn_stat.st_blocks -= 1 << log2_stat_blocks_per_fs_block;
        np->dn_stat.st_mode &= ~S_IPTRANS;

@@ -473,6 +473,7 @@ extern pthread_spinlock_t modified_global_blocks_lock;
 extern int global_block_modified (block_t block);
 extern void record_global_poke (void *ptr);
 extern void sync_global_ptr (void *bptr, int wait);
+extern void flush_global_ptr (void *ptr, int wait);
 extern void record_indir_poke (struct node *node, void *ptr);
 extern void sync_global (int wait);
 extern void alloc_sync (struct node *np);
@@ -522,6 +523,18 @@ sync_global_ptr (void *ptr, int wait)
   disk_cache_block_deref (block_ptr);
   pager_sync_some (diskfs_disk_pager,
 		   block_ptr - disk_cache, block_size, wait);
+}
+
+/* This drops data of non-file block.  */
+EXT2FS_EI void
+flush_global_ptr (void *ptr, int wait)
+{
+  block_t block = boffs_block (bptr_offs (ptr));
+  void *block_ptr = bptr (block);
+  ext2_debug ("(%p -> %u)", ptr, block);
+  _disk_cache_block_deref (block_ptr);
+  pager_flush_some (diskfs_disk_pager,
+		    block_ptr - disk_cache, block_size, wait);
 
 }
 
