@@ -232,7 +232,6 @@ repeat:
 	{
 	  ext2_warning ("bit already set for inode %" PRIu64, inum);
 	  disk_cache_block_deref (bh);
-	  bh = NULL;
 	  goto repeat;
 	}
       record_global_poke (bh);
@@ -241,7 +240,6 @@ repeat:
   else
     {
       disk_cache_block_deref (bh);
-      bh = NULL;
       if (le16toh (gdp->bg_free_inodes_count) != 0)
 	{
 	  ext2_error ("free inodes count corrupted in group %d", i);

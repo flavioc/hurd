@@ -265,7 +265,6 @@ repeat:
 	}
 
       disk_cache_block_deref (bh);
-      bh = NULL;
     }
 
   ext2_debug ("bit not found in block group %d", i);
@@ -300,7 +299,6 @@ repeat:
   if (j >= le32toh (sblock->s_blocks_per_group))
     {
       disk_cache_block_deref (bh);
-      bh = NULL;
       ext2_error ("free blocks count corrupted for block group %d", i);
       pthread_spin_unlock (&global_lock);
       return 0;
@@ -332,7 +330,6 @@ got_block:
     {
       ext2_warning ("bit already set for block %d", j);
       disk_cache_block_deref (bh);
-      bh = NULL;
       goto repeat;
     }
 
