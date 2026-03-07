@@ -520,7 +520,7 @@ sync_global_ptr (void *ptr, int wait)
   void *block_ptr = bptr (block);
   ext2_debug ("(%p -> %u)", ptr, block);
   global_block_modified (block);
-  disk_cache_block_deref (block_ptr);
+  _disk_cache_block_deref (block_ptr);
   pager_sync_some (diskfs_disk_pager,
 		   block_ptr - disk_cache, block_size, wait);
 }
