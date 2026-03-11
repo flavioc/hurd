@@ -117,7 +117,7 @@ pokel_add (struct pokel *pokel, void *loc, vm_size_t length)
 
 /* Move all pending pokes from POKEL into its free list.  If SYNC is true,
    otherwise do nothing.  */
-void
+static void
 _pokel_exec (struct pokel *pokel, int sync, int wait)
 {
   struct poke *pl, *pokes, *last = NULL;
