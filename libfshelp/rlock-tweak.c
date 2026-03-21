@@ -61,9 +61,10 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
       return l;
     }
 
-  inline void
+  inline struct rlock_list *
   rele_lock (struct rlock_list *l, int wake_waiters)
     {
+      struct rlock_list *next = l->po.next;
       list_unlink (po, l);
       list_unlink (node, l);
 
@@ -72,19 +73,19 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 
       pthread_cond_destroy(&l->wait);
       free (l);
+      return next;
     }
 
   error_t
   unlock_region (loff_t start, loff_t len)
     {
-      struct rlock_list *l;
+      struct rlock_list *l = *po->locks;
 
-      for (l = *po->locks; l; l = l->po.next)
+      while (l)
 	{
 	  if (l->len != 0 && l->start + l->len <= start)
 	    /* We start after the locked region ends.  */
 	    {
-	      continue;
 	    }
 	  else if (len != 0 && start + len <= l->start)
 	    /* We end before this region starts.  Since we are sorted,
@@ -98,7 +99,7 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 			   && l->start + l->len <= start + len)))
 	    /* We wrap the locked region; consume it.  */
 	    {
-	      rele_lock (l, 1);
+	      l = rele_lock (l, 1);
 	      continue;
 	    }
 	  else if (start <= l->start
@@ -135,8 +136,6 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 		  l->waiting = 0;
 		  pthread_cond_broadcast (&l->wait);
 		}
-
-	      continue;
 	    }
 	  else if (l->start < start
 		   && (l->len == 0
@@ -170,6 +169,8 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 	    }
 	  else
 	    assert (! "Impossible!");
+
+	  l = l->po.next;
 	}
 
       return 0;
@@ -196,9 +197,9 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
   inline error_t
   merge_in (loff_t start, loff_t len, int type)
     {
-      struct rlock_list *l;
+      struct rlock_list *l = *po->locks;
 
-      for (l = *po->locks; l; l = l->po.next)
+      while (l)
 	{
 	  if (l->start <= start
 	      && (l->len == 0
@@ -235,7 +236,7 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 		  if (! tail)
 		    {
 		      if (head)
-			rele_lock (head, 0);
+			(void) rele_lock (head, 0);
 		      return ENOMEM;
 		    }
 		}
@@ -258,7 +259,7 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 		  start = l->start;
 		  len = l->len;
 
-		  rele_lock (l, 1);
+		  l = rele_lock (l, 1);
 		  continue;
 		}
 	      else
@@ -277,7 +278,7 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 
 	      if (type == l->type || type == F_WRLCK)
 		{
-		  rele_lock (l, 1);
+		  l = rele_lock (l, 1);
 		  /* Try to merge more.  */
 		  continue;
 		}
@@ -301,8 +302,6 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 		  if (len != 0)
 		    len = start + len - (l->start + l->len);
 		  start = l->start + l->len;
-
-		  continue;
 		}
 	      else
 		/* Our end is silently consumed.  */
@@ -328,7 +327,7 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 		    len += start - l->start;
 		  start = l->start;
 
-		  rele_lock (l, 1);
+		  l = rele_lock (l, 1);
 
 		  /* Try to merge in more.  */
 		  continue;
@@ -338,7 +337,6 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 		     intersection) and we are not the same type.  */
 		{
 		  /* The is nothing to do except continue the search.  */
-		  continue;
 		}
 	      else if (type == F_WRLCK)
 		/* We comsume the intersection.  */
@@ -349,7 +347,6 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 
 		  /* Don't create the lock now; we might be able to
 		     consume more locks.  */
-		  continue;
 		}
 	      else
 		/* We are dominated; the locked region comsumes the
@@ -366,7 +363,6 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 
 		  /* There is still a chance that we can consume more
 		     locks.  */
-		  continue;
 		}
 	    }
 	  else if (start < l->start
@@ -393,7 +389,6 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 		   region, however, we are not the same type.  Just
 		   insert it.  */
 		{
-		  continue;
 		}
 	      else if (type == F_WRLCK)
 		/* We consume the intersection.  */
@@ -441,8 +436,9 @@ fshelp_rlock_tweak (struct rlock_box *box, pthread_mutex_t *mutex,
 	    {
 	      assert (start >= l->start + l->len);
 	      assert (l->len != 0);
-	      continue;
 	    }
+
+          l = l->po.next;
 	}
 
       return (gen_lock (start, len, type) ? 0 : ENOMEM);
