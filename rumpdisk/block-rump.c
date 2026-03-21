@@ -553,6 +553,7 @@ rumpdisk_device_set_status (void *d, dev_flavor_t flavor, dev_status_t status,
       /* Partitions are not implemented here, but in the parted-based
        * translators.  */
       return D_SUCCESS;
+#ifdef DEV_FLUSH_CACHE
     case DEV_FLUSH_CACHE:
       /* * Rump/NetBSD expects an integer argument for DIOCCACHESYNC.
        * 1 = Force flush
@@ -565,6 +566,7 @@ rumpdisk_device_set_status (void *d, dev_flavor_t flavor, dev_status_t status,
 	return rump_errno2host (errno);
       }
       return D_SUCCESS;
+#endif
     default:
       return D_INVALID_OPERATION;
     }
