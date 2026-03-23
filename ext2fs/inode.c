@@ -112,7 +112,7 @@ ext2_decode_extra_time (uint32_t legacy_sec, uint32_t extra,
                         time_t *sec, long *nsec)
 {
   /* Epoch extension (bits 32 and 33) */
-  *sec = (time_t)legacy_sec + (((time_t)extra & 0x3) << 32);
+  *sec = (time_t)legacy_sec + (time_t)(((uint64_t)extra & 0x3) << 32);
   /* Nanoseconds (bits 2 through 31) */
   *nsec = (long)(extra >> 2);
 }
@@ -124,7 +124,7 @@ ext2_encode_extra_time (time_t sec, long nsec)
   /* Pack nanoseconds into the upper 30 bits */
   extra = (uint32_t)(nsec << 2);
   /* Pack bits 32 and 33 of seconds into the lower 2 bits */
-  extra |= (uint32_t)((sec >> 32) & 0x3);
+  extra |= (uint32_t)(((uint64_t)sec >> 32) & 0x3);
   return extra;
 }
 
