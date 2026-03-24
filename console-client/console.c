@@ -66,6 +66,7 @@ static char *console_node;
 
 /* If set, the client will daemonize.  */
 static int daemonize;
+static int daemon_wait = 20;
 
 /* Callbacks for input source drivers.  */
 
@@ -534,6 +535,7 @@ cons_vcons_set_mousecursor_status (vcons_t vcons, int status)
 
 
 #define DAEMONIZE_KEY 0x80 /* !isascii (DAEMONIZE_KEY), so no short option.  */
+#define DAEMON_WAIT_KEY 0x81 /* !isascii (DAEMON_WAIT_KEY), so no short option.  */
 
 /* Console-specific options.  */
 static const struct argp_option
@@ -545,6 +547,8 @@ options[] =
      "Set a translator on the node FILE (default: " DEFAULT_CONSOLE_NODE ")" },
 #if HAVE_DAEMON
     {"daemonize", DAEMONIZE_KEY, NULL, 0, "daemonize the console client"},
+    {"daemon-wait", DAEMON_WAIT_KEY, "SECS", 0,
+     "Seconds to wait for the daemon to be responsive (default 20)"},
 #endif
     {0}
   };
@@ -601,6 +605,25 @@ parse_opt (int key, char *arg, struct argp_state *state)
 
     case DAEMONIZE_KEY:
       daemonize = 1;
+      break;
+
+    case DAEMON_WAIT_KEY:
+      {
+        char *endptr;
+        errno = 0;
+        long secs = strtol (arg, &endptr, 10);
+        if (arg == endptr || *endptr != 0)
+          {
+             argp_error (state, "deamon-wait must recive a numeric argument");
+             return EINVAL;
+          }
+        if (errno == ERANGE || secs > INT_MAX || secs < 0)
+          {
+             argp_error (state, "the number passed to deamon-wait is out of range");
+             return EINVAL;
+          }
+        daemon_wait = (int)secs;
+      }
       break;
 
     case ARGP_KEY_SUCCESS:
@@ -698,9 +721,9 @@ main (int argc, char *argv[])
 	  /* The parent.  */
 	  int ret;
 
-	  /* Wait for 20 seconds for the return value passed from the
+	  /* Wait for `daemon_wait` seconds for the return value passed from the
 	     daemon process. .	*/
-	  if ((ret = daemon_retval_wait (20)) < 0)
+	  if ((ret = daemon_retval_wait (daemon_wait)) < 0)
 	    error (1, errno,
 		   "Could not receive return value from daemon process");
 
