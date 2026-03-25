@@ -142,8 +142,7 @@ diskfs_S_file_set_translator (struct protid *cred,
 		  const char *arg;
 
 		  arg = passive + strlen (passive) + 1;
-		  assert_backtrace (arg <= passive + passivelen);
-		  if (arg == passive + passivelen)
+		  if (arg >= passive + passivelen)
 		    {
 		      pthread_mutex_unlock (&np->lock);
 		      return EINVAL;
@@ -151,8 +150,7 @@ diskfs_S_file_set_translator (struct protid *cred,
 		  major = strtol (arg, 0, 0);
 
 		  arg = arg + strlen (arg) + 1;
-		  assert_backtrace (arg < passive + passivelen);
-		  if (arg == passive + passivelen)
+		  if (arg >= passive + passivelen)
 		    {
 		      pthread_mutex_unlock (&np->lock);
 		      return EINVAL;
@@ -186,8 +184,7 @@ diskfs_S_file_set_translator (struct protid *cred,
 	      if (newmode == S_IFLNK)
 		{
 		  const char *arg = passive + strlen (passive) + 1;
-		  assert_backtrace (arg <= passive + passivelen);
-		  if (arg == passive + passivelen)
+		  if (arg >= passive + passivelen)
 		    {
 		      pthread_mutex_unlock (&np->lock);
 		      return EINVAL;

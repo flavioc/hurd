@@ -60,8 +60,12 @@ diskfs_S_io_read (struct protid *cred,
   if (maxread > *datalen)
     {
       ourbuf = 1;
-      buf = mmap (0, maxread, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);     
-      assert_backtrace (buf != MAP_FAILED);
+      buf = mmap (0, maxread, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
+      if (buf == MAP_FAILED)
+	{
+	  pthread_mutex_unlock (&np->lock);
+	  return errno;
+	}
       *data = buf;
     }
   else

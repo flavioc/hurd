@@ -970,7 +970,8 @@ diskfs_get_directs (struct node *dp,
   if (allocsize > *datacnt)
     {
       *data = mmap (0, allocsize, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
-      assert_backtrace (*data != MAP_FAILED);
+      if (*data == MAP_FAILED)
+	return errno;
     }
 
   /* Set bufp appropriately */

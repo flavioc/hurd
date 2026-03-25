@@ -19,6 +19,7 @@
 #include <hurd/paths.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include "fs_S.h"
 
 /* Implement file_get_translator as described in <hurd/fs.defs>. */
@@ -47,7 +48,12 @@ diskfs_S_file_get_translator (struct protid *cred,
 	  if (len > *translen)
 	    {
 	      *trans = mmap (0, len, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
-	      assert_backtrace (*trans != MAP_FAILED);
+	      if (*trans == MAP_FAILED)
+		{
+		  err = errno;
+		  free (string);
+		  goto out;
+		}
 	    }
 	  memcpy (*trans, string, len);
 	  *translen = len;
@@ -63,7 +69,11 @@ diskfs_S_file_get_translator (struct protid *cred,
       if (len > *translen)
 	{
 	  *trans = mmap (0, len, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
-	  assert_backtrace (*trans != MAP_FAILED);
+	  if (*trans == MAP_FAILED)
+	    {
+	      err = errno;
+	      goto out;
+	    }
 	}
       memcpy (*trans, _HURD_SYMLINK, sizeof _HURD_SYMLINK);
 
@@ -106,7 +116,12 @@ diskfs_S_file_get_translator (struct protid *cred,
       if (buflen > *translen)
 	{
 	  *trans = mmap (0, buflen, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
-	  assert_backtrace (*trans != MAP_FAILED);
+	  if (*trans == MAP_FAILED)
+	    {
+	      err = errno;
+	      free (buf);
+	      goto out;
+	    }
 	}
       memcpy (*trans, buf, buflen);
       free (buf);
@@ -121,7 +136,11 @@ diskfs_S_file_get_translator (struct protid *cred,
       if (len > *translen)
 	{
 	  *trans = mmap (0, len, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
-	  assert_backtrace (*trans != MAP_FAILED);
+	  if (*trans == MAP_FAILED)
+	    {
+	      err = errno;
+	      goto out;
+	    }
 	}
       memcpy (*trans, _HURD_FIFO, sizeof _HURD_FIFO);
       *translen = len;
@@ -135,7 +154,11 @@ diskfs_S_file_get_translator (struct protid *cred,
       if (len > *translen)
 	{
 	  *trans = mmap (0, len, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
-	  assert_backtrace (*trans != MAP_FAILED);
+	  if (*trans == MAP_FAILED)
+	    {
+	      err = errno;
+	      goto out;
+	    }
 	}
       memcpy (*trans, _HURD_IFSOCK, sizeof _HURD_IFSOCK);
       *translen = len;
@@ -144,6 +167,7 @@ diskfs_S_file_get_translator (struct protid *cred,
   else
     err = EINVAL;
 
+out:
   pthread_mutex_unlock (&np->lock);
 
   return err;
