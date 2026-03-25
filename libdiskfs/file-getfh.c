@@ -42,8 +42,6 @@ diskfs_S_file_getfh (struct protid *cred, data_t *fh,
 
   node = cred->po->np;
 
-  pthread_mutex_lock (&node->lock);
-
   if (*fh_len < sizeof (union diskfs_fhandle))
     {
       *fh = mmap (0, sizeof (union diskfs_fhandle), PROT_READ|PROT_WRITE,
@@ -55,6 +53,9 @@ diskfs_S_file_getfh (struct protid *cred, data_t *fh,
   f = (union diskfs_fhandle *) *fh;
 
   memset (f, 0, sizeof *f);
+
+  pthread_mutex_lock (&node->lock);
+
   f->data.cache_id = node->cache_id;
   f->data.gen = node->dn_stat.st_gen;
 
