@@ -614,7 +614,7 @@ extern void _ext2_error (const char *, const char *, ...)
 
 #define ext2_panic(fmt, args...) _ext2_panic (__FUNCTION__, fmt , ##args)
 extern void _ext2_panic (const char *, const char *, ...)
-     __attribute__ ((format (printf, 2, 3)));
+     __attribute__ ((format (printf, 2, 3))) __attribute__((noreturn));
 
 extern void ext2_warning (const char *, ...)
      __attribute__ ((format (printf, 1, 2)));
