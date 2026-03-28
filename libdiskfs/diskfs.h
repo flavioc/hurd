@@ -125,6 +125,10 @@ struct node
   loff_t allocsize;
 
   ino64_t cache_id;
+
+  /* The Intrusive List Pointers */
+  struct node *cache_next;
+  struct node *cache_prev;
 };
 
 struct diskfs_control

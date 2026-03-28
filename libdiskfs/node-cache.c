@@ -59,6 +59,43 @@ static struct hurd_ihash nodecache =
   HURD_IHASH_INITIALIZER_GKI (offsetof (struct node, slot), NULL, NULL,
                               hash, compare);
 static pthread_rwlock_t nodecache_lock = PTHREAD_RWLOCK_INITIALIZER;
+static struct node *nodecache_list_head = NULL;
+static struct node *nodecache_list_tail = NULL;
+
+/* Unlinks a node from the active nodes doubly-linked list.
+   The caller MUST hold nodecache_lock (for writing) before calling this. */
+static void
+unlink_list_node (struct node *np)
+{
+  if (np->cache_prev)
+    np->cache_prev->cache_next = np->cache_next;
+  if (np->cache_next)
+    np->cache_next->cache_prev = np->cache_prev;
+
+  if (nodecache_list_head == np)
+    nodecache_list_head = np->cache_next;
+  if (nodecache_list_tail == np)
+    nodecache_list_tail = np->cache_prev;
+
+  np->cache_prev = NULL;
+  np->cache_next = NULL;
+}
+
+/* Adds a node to the tail of the active nodes doubly-linked list.
+   The caller MUST hold nodecache_lock (for writing) before calling this. */
+static void
+link_list_node (struct node *np)
+{
+  np->cache_next = NULL;
+  np->cache_prev = nodecache_list_tail;
+
+  if (nodecache_list_tail)
+    nodecache_list_tail->cache_next = np;
+  else
+    nodecache_list_head = np;
+
+  nodecache_list_tail = np;
+}
 
 /* Fetch inode INUM, set *NPP to the node structure;
    gain one user reference and lock the node.  */
@@ -106,6 +143,7 @@ diskfs_cached_lookup_context (ino_t inum, struct node **npp,
   err = hurd_ihash_locp_add (&nodecache, slot,
 			     (hurd_ihash_key_t) &np->cache_id, np);
   assert_perror_backtrace (err);
+  link_list_node (np);
   diskfs_nref_light (np);
   pthread_rwlock_unlock (&nodecache_lock);
 
@@ -115,6 +153,7 @@ diskfs_cached_lookup_context (ino_t inum, struct node **npp,
    {
     pthread_rwlock_wrlock (&nodecache_lock);
     hurd_ihash_remove (&nodecache, (hurd_ihash_key_t) &np->cache_id);
+    unlink_list_node (np);
     pthread_rwlock_unlock (&nodecache_lock);
 
     /* Don't delete from disk. */
@@ -179,6 +218,7 @@ diskfs_try_dropping_softrefs (struct node *np)
       hurd_ihash_locp_remove (&nodecache, np->slot);
       np->slot = NULL;
 
+      unlink_list_node (np);
       /* Flush node if needed, before forgetting it */
       diskfs_node_update (np, diskfs_synchronous);
 
@@ -191,59 +231,58 @@ diskfs_try_dropping_softrefs (struct node *np)
 
 /* For each active node, call FUN.  The node is to be locked around the call
    to FUN.  If FUN returns non-zero for any node, then immediately stop, and
-   return that value.  */
+   return that value.
+
+   We iterate the list forwards (from head to tail). Since new nodes
+   are appended to the tail, this means we process the oldest nodes first
+   (FIFO order). This preserves the chronological order of file creation
+   and modification, which allows the block layer and disk scheduler to
+   coalesce I/O operations and perform sequential disk writes efficiently.
+   Iterating backwards (LIFO) would cause severe disk thrashing. */
 error_t __attribute__ ((weak))
 diskfs_node_iterate (error_t (*fun)(struct node *))
 {
   error_t err = 0;
-  size_t num_nodes;
-  struct node *node, **node_list, **p;
+  struct node *current, *next_node;
 
   pthread_rwlock_rdlock (&nodecache_lock);
+  current = nodecache_list_head;
 
-  /* We must copy everything from the hash table into another data structure
-     to avoid running into any problems with the hash-table being modified
-     during processing (normally we delegate access to hash-table with
-     nodecache_lock, but we can't hold this while locking the
-     individual node locks).  */
-  /* XXX: Can we?  */
-  num_nodes = nodecache.nr_items;
+  /* Bootstrap the loop by grabbing a ref to the very first node */
+  if (current)
+    refcounts_ref (&current->refcounts, NULL);
 
-  /* TODO This method doesn't scale beyond a few dozen nodes and should be
-     replaced.  */
-  node_list = malloc (num_nodes * sizeof (struct node *));
-  if (node_list == NULL)
+  while (current != NULL)
     {
+      /* Grab a next pointer so it doesn't disappear while we are processing
+       * 'current' */
+      next_node = current->cache_next;
+      if (next_node)
+        refcounts_ref (&next_node->refcounts, NULL);
+
       pthread_rwlock_unlock (&nodecache_lock);
-      return ENOMEM;
+
+      pthread_mutex_lock (&current->lock);
+      err = (*fun)(current);
+      pthread_mutex_unlock (&current->lock);
+
+      /* We are done with 'current', drop the ref we grabbed */
+      diskfs_nrele (current);
+      if (err)
+        {
+          /* We don't need to traverse the rest of the list!
+             Just drop the next_node ref if we grabbed it, and return. */
+          if (next_node)
+            diskfs_nrele (next_node);
+          return err;
+        }
+
+      /* Re-acquire the global lock to loop around */
+      pthread_rwlock_rdlock (&nodecache_lock);
+      current = next_node;
     }
 
-  p = node_list;
-  HURD_IHASH_ITERATE (&nodecache, i)
-    {
-      *p++ = node = i;
-
-      /* We acquire a hard reference for node, but without using
-	 diskfs_nref.  We do this so that diskfs_new_hardrefs will not
-	 get called.  */
-      refcounts_ref (&node->refcounts, NULL);
-    }
   pthread_rwlock_unlock (&nodecache_lock);
-
-  p = node_list;
-  while (num_nodes-- > 0)
-    {
-      node = *p++;
-      if (!err)
-	{
-	  pthread_mutex_lock (&node->lock);
-	  err = (*fun)(node);
-	  pthread_mutex_unlock (&node->lock);
-	}
-      diskfs_nrele (node);
-    }
-
-  free (node_list);
   return err;
 }
 
