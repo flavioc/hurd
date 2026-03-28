@@ -18,7 +18,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
-#include "priv.h"
+#include <libdiskfs/diskfs.h>
 #include <string.h>
 
 /* Lookup in directory DP (which is locked) the name NAME.  TYPE will
@@ -71,13 +71,13 @@
 
    This function is a wrapper for diskfs_lookup_hard.  */
 error_t
-diskfs_lookup (struct node *dp, char *name, enum lookup_type type,
+diskfs_lookup (struct node *dp, char *name, lookup_flags_t l_flags,
 	       struct node **np, struct dirstat *ds, struct protid *cred)
 {
   error_t err;
   struct node *cached;
 
-  if (type == REMOVE || type == RENAME)
+  if (l_flags == REMOVE || l_flags == RENAME)
     assert_backtrace (np);
 
   if (!S_ISDIR (dp->dn_stat.st_mode))
@@ -133,7 +133,7 @@ diskfs_lookup (struct node *dp, char *name, enum lookup_type type,
       return EAGAIN;
     }
 
-  if (type == LOOKUP)
+  if (l_flags == LOOKUP)
     /* Check the cache first */
     cached = diskfs_check_lookup_cache (dp, name);
   else
@@ -163,13 +163,13 @@ diskfs_lookup (struct node *dp, char *name, enum lookup_type type,
     }
   else
     {
-      err = diskfs_lookup_hard (dp, name, type, np, ds, cred);
+      err = diskfs_lookup_hard (dp, name, l_flags , np, ds, cred);
       if (err && err != ENOENT)
 	return err;
 
-      if (type == RENAME
-	  || (type == CREATE && err == ENOENT)
-	  || (type == REMOVE && err != ENOENT))
+      if (l_flags == RENAME
+	  || (l_flags == CREATE && err == ENOENT)
+	  || (l_flags == REMOVE && err != ENOENT))
 	{
 	  error_t err2;
 
@@ -193,9 +193,9 @@ diskfs_lookup (struct node *dp, char *name, enum lookup_type type,
 	    }
 	}
 
-      if ((type == LOOKUP || type == CREATE) && !err && np)
+      if ((l_flags == LOOKUP || l_flags == CREATE) && !err && np)
 	diskfs_enter_lookup_cache (dp, *np, name);
-      else if (type == LOOKUP && err == ENOENT)
+      else if (l_flags == LOOKUP && err == ENOENT)
 	diskfs_enter_lookup_cache (dp, 0, name);
     }
 

@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <libdiskfs/diskfs.h>
 #include "isofs.h"
 
 /* From inode.c */
@@ -66,7 +67,7 @@ isonamematch (const char *dirname, size_t dnamelen,
 /* Implement the diskfs_lookup callback from the diskfs library.  See
    <hurd/diskfs.h> for the interface specification. */
 error_t
-diskfs_lookup_hard (struct node *dp, const char *name, enum lookup_type type,
+diskfs_lookup_hard (struct node *dp, const char *name, lookup_flags_t l_flags,
 		    struct node **npp, struct dirstat *ds, struct protid *cred)
 {
   error_t err = ENOENT;
@@ -76,15 +77,16 @@ diskfs_lookup_hard (struct node *dp, const char *name, enum lookup_type type,
   void *buf;
   void *blockaddr;
   ino_t id;
+  enum lookup_type type;
 
-  if ((type == REMOVE) || (type == RENAME))
+  if ((l_flags == REMOVE) || (l_flags == RENAME))
     assert_backtrace (npp);
 
   if (npp)
     *npp = 0;
 
-  spec_dotdot = type & SPEC_DOTDOT;
-  type &= ~SPEC_DOTDOT;
+  spec_dotdot = l_flags & SPEC_DOTDOT;
+  type = l_flags & ~SPEC_DOTDOT;
 
   namelen = strlen (name);
 

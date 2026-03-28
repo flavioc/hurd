@@ -146,6 +146,13 @@ enum lookup_type
   RENAME,
 };
 
+/**
+ * Represents a lookup_type optionally OR'd with lookup flags (SPEC_DOTDOT)
+ * We use a typedef rather than the raw enum to safely allow bitwise math
+ * without triggering undefined behavior or static analyzer warnings.
+ */
+typedef int lookup_flags_t;
+
 /* Pending directory and file modification request */
 struct modreq
 {
@@ -352,7 +359,7 @@ error_t diskfs_set_statfs (fsys_statfsbuf_t *statfsbuf);
    Return EIO if appropriate.
 */
 error_t diskfs_lookup_hard (struct node *dp,
-			    const char *name, enum lookup_type type,
+			    const char *name, lookup_flags_t l_flags,
 			    struct node **np, struct dirstat *ds,
 			    struct protid *cred);
 
@@ -815,7 +822,7 @@ diskfs_disknode_node (struct disknode *disknode)
    This function is a wrapper for diskfs_lookup_hard.
 */
 error_t diskfs_lookup (struct node *dp,
-		       char *name, enum lookup_type type,
+		       char *name, lookup_flags_t l_flags,
 		       struct node **np, struct dirstat *ds,
 		       struct protid *cred);
 

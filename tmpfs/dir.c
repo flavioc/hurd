@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
+#include <libdiskfs/diskfs.h>
 #include "tmpfs.h"
 #include <stdlib.h>
 
@@ -169,18 +170,18 @@ diskfs_drop_dirstat (struct node *dp, struct dirstat *ds)
 
 error_t
 diskfs_lookup_hard (struct node *dp,
-		    const char *name, enum lookup_type type,
+		    const char *name, lookup_flags_t l_flags,
 		    struct node **np, struct dirstat *ds,
 		    struct protid *cred)
 {
   const size_t namelen = strlen (name);
   struct tmpfs_dirent *d, **prevp;
 
-  if (type == REMOVE || type == RENAME)
+  if (l_flags == REMOVE || l_flags == RENAME)
     assert_backtrace (np);
 
   if (ds)
-    ds->dotdot = type & SPEC_DOTDOT;
+    ds->dotdot = l_flags & SPEC_DOTDOT;
 
   if (namelen == 1 && name[0] == '.')
     {
@@ -200,7 +201,7 @@ diskfs_lookup_hard (struct node *dp,
       if (dddn == 0)		/* root directory */
 	return EAGAIN;
 
-      if (type == (REMOVE|SPEC_DOTDOT) || type == (RENAME|SPEC_DOTDOT))
+      if (l_flags == (REMOVE|SPEC_DOTDOT) || l_flags == (RENAME|SPEC_DOTDOT))
         {
 	  *np = *dddn->hprevp;
 	  assert_backtrace (*np);
@@ -213,7 +214,7 @@ diskfs_lookup_hard (struct node *dp,
 	  pthread_mutex_unlock (&dp->lock);
           err = diskfs_cached_lookup ((ino_t) (intptr_t) dddn, np);
 
-	  if (type == (LOOKUP|SPEC_DOTDOT))
+	  if (l_flags == (LOOKUP|SPEC_DOTDOT))
 	    diskfs_nrele (dp);
 	  else
 	    pthread_mutex_lock (&dp->lock);

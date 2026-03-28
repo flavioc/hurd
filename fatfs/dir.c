@@ -27,6 +27,7 @@
 #include <hurd/fsys.h>
 
 #include "fatfs.h"
+#include <libdiskfs/diskfs.h>
 
 /* The size of a directory block is usually just the cluster size.
    However, the root directory of FAT12/16 file systems is stored in
@@ -172,7 +173,7 @@ fatnamematch (const char *dirname, const char *username, size_t unamelen)
 /* Implement the diskfs_lookup callback from the diskfs library.  See
    <hurd/diskfs.h> for the interface specification.  */
 error_t
-diskfs_lookup_hard (struct node *dp, const char *name, enum lookup_type type,
+diskfs_lookup_hard (struct node *dp, const char *name, lookup_flags_t l_flags,
 		    struct node **npp, struct dirstat *ds, struct protid *cred)
 {
   error_t err;
@@ -182,22 +183,23 @@ diskfs_lookup_hard (struct node *dp, const char *name, enum lookup_type type,
   struct node *np = 0;
   int retry_dotdot = 0;
   vm_prot_t prot =
-    (type == LOOKUP) ? VM_PROT_READ : (VM_PROT_READ | VM_PROT_WRITE);
+    (l_flags == LOOKUP) ? VM_PROT_READ : (VM_PROT_READ | VM_PROT_WRITE);
   memory_object_t memobj;
   vm_address_t buf = 0;
   vm_size_t buflen = 0;
   int blockaddr;
   int idx, lastidx;
   int looped;
+  enum lookup_type type;
 
-  if ((type == REMOVE) || (type == RENAME))
+  if ((l_flags == REMOVE) || (l_flags == RENAME))
     assert_backtrace (npp);
 
   if (npp)
     *npp = 0;
 
-  spec_dotdot = type & SPEC_DOTDOT;
-  type &= ~SPEC_DOTDOT;
+  spec_dotdot = l_flags & SPEC_DOTDOT;
+  type = l_flags & ~SPEC_DOTDOT;
 
   namelen = strlen (name);
 
