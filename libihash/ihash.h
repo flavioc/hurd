@@ -309,30 +309,41 @@ hurd_ihash_value_t hurd_ihash_locp_find (hurd_ihash_t ht,
    variable.
 
    We can define variables inside the for-loop initializer (C99), but
-   we can only use one basic type to do that.  We can not use two
-   for-loops, because we want a break statement inside the iterator
-   block to terminate the operation.  So we must have both variables
-   of the same basic type, but we can make one (or both) of them a
-   pointer type.
+   we can only use one basic type to do that.  Traditionally, we could
+   not use two for-loops to get around this, because a break statement
+   inside the iterator block would only terminate the inner loop.
 
-   The pointer to the value can be used as the loop variable.  This is
-   also the first element of the hash item, so we can cast the pointer
+   However, to prevent multiple evaluations of the HT argument, we now
+   use an outer dummy for-loop to cache the table pointer. This outer
+   loop is designed to run exactly once. If a break statement is used
+   inside the iterator block, it terminates the inner loop, and control
+   passes to the outer loop's increment step. This sets the cache pointer
+   to NULL, instantly failing the outer loop condition and terminating
+   the entire macro.
+
+   The pointer to the value can be used as the inner loop variable.  This
+   is also the first element of the hash item, so we can cast the pointer
    freely between these two types.  The pointer is only dereferenced
    after the loop condition is checked (but of course the value the
    pointer pointed to must not have an influence on the condition
    result, so the comma operator is used to make sure this
    subexpression is always true).  */
-#define HURD_IHASH_ITERATE(ht, val)					\
-  for (hurd_ihash_value_t val,						\
-         *_hurd_ihash_valuep = (ht)->size ? &(ht)->items[0].value : 0;	\
-       (ht)->size							\
-	 && (size_t) ((_hurd_ihash_item_t) _hurd_ihash_valuep		\
-		      - &(ht)->items[0])				\
-            < (ht)->size						\
-         && (val = *_hurd_ihash_valuep, 1);				\
-       _hurd_ihash_valuep = (hurd_ihash_value_t *)			\
-	 (((_hurd_ihash_item_t) _hurd_ihash_valuep) + 1))		\
-    if (val != _HURD_IHASH_EMPTY && val != _HURD_IHASH_DELETED)
+#define HURD_IHASH_ITERATE(ht, val)                                            \
+  /* Cache 'ht' to prevent multiple evaluation of functions. */                \
+  for (__typeof__(ht) _ihash_ht_##val = (ht);                                  \
+       _ihash_ht_##val != NULL;                                                \
+       _ihash_ht_##val = NULL)                                                 \
+    for (hurd_ihash_value_t val,                                               \
+           *_ihash_p_##val = _ihash_ht_##val->size                             \
+                             ? &_ihash_ht_##val->items[0].value : 0;           \
+         _ihash_ht_##val->size                                                 \
+           && (size_t) ((_hurd_ihash_item_t) _ihash_p_##val                    \
+                        - &_ihash_ht_##val->items[0])                          \
+              < _ihash_ht_##val->size                                          \
+           && (((val) = *_ihash_p_##val), 1);                                  \
+         _ihash_p_##val = (hurd_ihash_value_t *)                               \
+           (((_hurd_ihash_item_t) _ihash_p_##val) + 1))                        \
+      if ((val) != _HURD_IHASH_EMPTY && (val) != _HURD_IHASH_DELETED)
 
 /* Iterate over all elements in the hash table making both the key and
    the value available.  You use this macro with a block, for example
@@ -344,12 +355,19 @@ hurd_ihash_value_t hurd_ihash_locp_find (hurd_ihash_t ht,
    The block will be run for every element in the hash table HT.  The
    key and value of the current element is available as ITEM->key and
    ITEM->value.  */
-#define HURD_IHASH_ITERATE_ITEMS(ht, item)                              \
-  for (_hurd_ihash_item_t item = (ht)->size? &(ht)->items[0]: 0;	\
-       (ht)->size && item - &(ht)->items[0] < (ht)->size;               \
-       item++)                                                          \
-    if (item->value != _HURD_IHASH_EMPTY &&                             \
-        item->value != _HURD_IHASH_DELETED)
+#define HURD_IHASH_ITERATE_ITEMS(ht, item)                                     \
+  /* Cache 'ht' to prevent multiple evaluation of functions. */                \
+  for (__typeof__(ht) _ihash_items_ht_##item = (ht);                           \
+       _ihash_items_ht_##item != NULL;                                         \
+       _ihash_items_ht_##item = NULL)                                          \
+    for (_hurd_ihash_item_t item = _ihash_items_ht_##item->size                \
+                                   ? &_ihash_items_ht_##item->items[0] : 0;    \
+         _ihash_items_ht_##item->size                                          \
+           && (size_t) ((item) - &_ihash_items_ht_##item->items[0])            \
+              < _ihash_items_ht_##item->size;                                  \
+         (item)++)                                                             \
+      if ((item)->value != _HURD_IHASH_EMPTY &&                                \
+          (item)->value != _HURD_IHASH_DELETED)
 
 /* Remove the entry with the key KEY from the hash table HT.  If such
    an entry was found and removed, 1 is returned, otherwise 0.  */
