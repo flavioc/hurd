@@ -21,15 +21,27 @@
 
 #include "priv.h"
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <error.h>
+#include <errno.h>
+#include <mach_init.h>
+#include <mach/task_special_ports.h>
+#include <mach/message.h>
+#include <mach/port.h>
+#include <mach.h>
+#include <sys/stat.h>
+#include <hurd.h>
 #include <hurd/fsys.h>
 #include <hurd/paths.h>
+#include <hurd/process.h>
 #include <hurd/startup.h>
+#include <hurd/hurd_types.h>
+#include <libports/ports.h>
+#include <libdiskfs/diskfs.h>
 #include <assert-backtrace.h>
+#include <pthread.h>
 
-#include "startup_S.h"
 
 char *_diskfs_chroot_directory;
 
@@ -42,7 +54,7 @@ diskfs_call_fsys_startup (mach_port_t bootstrap, int flags,
   mach_port_t right;
 
   err = ports_create_port (diskfs_control_class, diskfs_port_bucket,
-                           sizeof (struct port_info), &newpi);
+                           sizeof (struct port_info), (void *)&newpi);
   if (! err)
     {
       right = ports_get_send_right (newpi);
@@ -208,7 +220,7 @@ _diskfs_init_completed (void)
 
   err = ports_create_port (diskfs_shutdown_notification_class,
 			   diskfs_port_bucket, sizeof (struct port_info),
-			   &pi);
+			   (void *)&pi);
   if (err)
     goto errout;
 
