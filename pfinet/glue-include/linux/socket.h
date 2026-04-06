@@ -79,9 +79,39 @@ put_cmsg(struct msghdr *msg, int level, int type, int len, void *data)
 #define CMSG_ALIGN(size)	(0)
 #define CMSG_LEN(size) 		(0)
 #else
+#define copy_to_user(to,from,n)		(memcpy ((to), (from), (n)), 0)
 static inline int
-put_cmsg(struct msghdr *msg, int level, int type, int len, void *data)
-{ return 0; }
+put_cmsg(struct msghdr * msg, int level, int type, int len, void *data)
+{
+  struct cmsghdr *cm = (struct cmsghdr*)msg->msg_control;
+  struct cmsghdr cmhdr;
+  int cmlen = CMSG_LEN(len);
+  int err;
+
+  if (cm==NULL || msg->msg_controllen < sizeof(*cm)) {
+    msg->msg_flags |= MSG_CTRUNC;
+    return 0; /* XXX: return error? check spec. */
+  }
+  if (msg->msg_controllen < cmlen) {
+    msg->msg_flags |= MSG_CTRUNC;
+    cmlen = msg->msg_controllen;
+  }
+  cmhdr.cmsg_level = level;
+  cmhdr.cmsg_type = type;
+  cmhdr.cmsg_len = cmlen;
+
+  err = -EFAULT;
+  if (copy_to_user(cm, &cmhdr, sizeof cmhdr))
+    goto out;
+  if (copy_to_user(CMSG_DATA(cm), data, cmlen - sizeof(struct cmsghdr)))
+    goto out;
+  cmlen = CMSG_SPACE(len);
+  msg->msg_control += cmlen;
+  msg->msg_controllen -= cmlen;
+  err = 0;
+  out:
+          return err;
+}
 #endif
 
 #ifndef MSG_NOSIGNAL
