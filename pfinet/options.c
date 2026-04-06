@@ -464,8 +464,8 @@ parse_opt (int opt, char *arg, struct argp_state *state)
 
 	  if (in->address == INADDR_NONE && in->netmask == INADDR_NONE)
 	    {
-	      h->curint->address = ADDR ("0.0.0.0", "address");
-	      h->curint->netmask = ADDR ("255.0.0.0", "netmask");
+	      in->address = ADDR ("0.0.0.0", "address");
+	      in->netmask = ADDR ("255.0.0.0", "netmask");
 	    }
 
 	  if (in->device)
