@@ -158,7 +158,7 @@ static uint32_t get_routes(ifrtreq_t *rtable) {
     if(addr != INADDR_ANY && addr != INADDR_NONE
       && netmask != INADDR_ANY && netmask != INADDR_NONE) {
       devname = netif_get_state (netif)->devname;
-      add_route(rtable_it++, devname, addr & netmask, netmask, INADDR_NONE);
+      add_route(rtable_it++, devname, addr & netmask, netmask, INADDR_ANY);
       count++;
       }
 
