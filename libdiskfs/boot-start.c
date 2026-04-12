@@ -20,6 +20,7 @@
 
 /* Written by Michael I. Bushnell.  */
 
+#include <assert-backtrace.h>
 #include "priv.h"
 #include <stdio.h>
 #include <hurd.h>
@@ -33,7 +34,6 @@
 #include <string.h>
 #include <argz.h>
 #include <error.h>
-#include "exec_S.h"
 #include "exec_startup_S.h"
 #include "fsys_S.h"
 #include "fsys_reply_U.h"
@@ -150,7 +150,7 @@ diskfs_start_bootstrap (void)
 	 	Hurd server bootstrap: bootfs[bootdev] exec ourfs
       */
       printf ("\nContinuing on new root filesystem %s:", diskfs_disk_name);
-      fflush (stdout);
+      if (fflush (stdout) != 0) assert_backtrace (! "fflush failed!");
     }
   else
     {
@@ -159,7 +159,7 @@ diskfs_start_bootstrap (void)
 
       printf ("Hurd server bootstrap: %s[%s]",
 	      program_invocation_short_name, diskfs_disk_name);
-      fflush (stdout);
+      if (fflush (stdout) != 0) assert_backtrace (! "fflush failed!");
 
       /* Get the execserver going and wait for its fsys_startup */
       pthread_mutex_init (&execstartlock, NULL);
@@ -270,7 +270,7 @@ diskfs_start_bootstrap (void)
     {
       printf ("\nCannot find startup program `%s': %s\n",
 	      initname, strerror (err));
-      fflush (stdout);
+      if (fflush (stdout) != 0) assert_backtrace (! "fflush failed!");
       free (exec_argv);
       assert_perror_backtrace (err);	/* XXX this won't reboot properly */
     }
@@ -307,11 +307,11 @@ diskfs_start_bootstrap (void)
   if (_diskfs_boot_pause)
     {
       printf ("pausing for %s...\n", exec_argv);
-      fflush (stdout);
-      getc (stdin);
+      if (fflush (stdout) != 0) assert_backtrace (! "fflush failed!");
+      if (getc (stdin) == EOF) assert_backtrace (! "getc failed!");
     }
   printf (" %s", basename (exec_argv));
-  fflush (stdout);
+  if (fflush (stdout) != 0) assert_backtrace (! "fflush failed!");
   err = exec_exec (diskfs_exec, startup_pt, MACH_MSG_TYPE_COPY_SEND,
 		   newt, 0, (data_t)exec_argv, exec_argvlen, (data_t)exec_env, exec_envlen,
 		   fdarray, MACH_MSG_TYPE_COPY_SEND, 3,
@@ -696,12 +696,13 @@ start_execserver (void)
   if (_diskfs_boot_pause)
     {
       printf ("pausing for exec\n");
-      fflush (stdout);
-      getc (stdin);
+      if (fflush (stdout) != 0) assert_backtrace (! "fflush failed!");
+      if (getc (stdin) == EOF) assert_backtrace (! "getc failed!");
     }
   err = task_resume (diskfs_exec_server_task);
   assert_perror_backtrace (err);
 
   printf (" exec");
-  fflush (stdout);
+
+  if (fflush (stdout) != 0) assert_backtrace (! "fflush failed!");
 }
