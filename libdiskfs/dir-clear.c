@@ -15,7 +15,10 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include "priv.h"
+#include <assert-backtrace.h>
+#include <errno.h>
+
+#include "diskfs.h"
 
 /* Clear the `.' and `..' entries from directory DP.  Its parent is PDP,
    and the user responsible for this is identified by CRED.  Both 

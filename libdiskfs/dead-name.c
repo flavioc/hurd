@@ -18,7 +18,9 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
-#include "priv.h"
+#include <hurd/fshelp.h>
+#include <hurd/ports.h>
+#include <mach.h>
 
 void
 ports_dead_name (void *notify, mach_port_t dead_name)

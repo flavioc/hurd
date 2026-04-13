@@ -19,7 +19,9 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
 
-#include "priv.h"
+#include <errno.h>
+
+#include "diskfs.h"
 
 /* Add NP to directory DP under the name NAME.  This will only be
    called after an unsuccessful call to diskfs_lookup of type CREATE

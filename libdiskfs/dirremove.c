@@ -18,7 +18,9 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
-#include "priv.h"
+#include <errno.h>
+#include "diskfs.h"
+#include <hurd/hurd_types.h>
 
 /* This will only be called after a successful call to diskfs_lookup
    of type REMOVE; this call should remove the name found from the

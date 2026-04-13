@@ -18,8 +18,10 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
+#include <errno.h>
 
-#include "priv.h"
+#include "diskfs.h"
+#include <hurd/hurd_types.h>
 
 /* This will only be called after a successful call to diskfs_lookup
    of type RENAME; this call should change the name found in directory

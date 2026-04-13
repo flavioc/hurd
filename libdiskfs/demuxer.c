@@ -15,8 +15,10 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include "priv.h"
 
+#include "diskfs.h"
+#include <mach.h>
+#include <mach/mig_errors.h>
 #include "io_S.h"
 #include "fs_S.h"
 #include "../libports/notify_S.h"
