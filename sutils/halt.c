@@ -29,10 +29,30 @@
 
 const char *argp_program_version = STANDARD_HURD_VERSION (halt);
 
+static const struct argp_option options[] =
+{
+  {"force",      'f', 0,      0, "Force reboot (compatibility)", 1},
+  {0,0}
+};
+
+error_t parse_opt (int key, char *arg, struct argp_state *state)
+{
+  switch (key)
+    {
+    case ARGP_KEY_NO_ARGS:
+    case 'f':
+      break;
+    case ARGP_KEY_ARG:
+    default:
+      return ARGP_ERR_UNKNOWN;
+    }
+  return 0;
+}
+
 int
 main (int argc, char *argv[])
 {
-  struct argp argp = {0, 0, 0, "Halt the system"};
+  struct argp argp = {options, parse_opt, "", "Halt the system"};
   argp_parse (&argp, argc, argv, 0, 0, 0);
   reboot (RB_HALT);
   error (1, errno, "reboot");
