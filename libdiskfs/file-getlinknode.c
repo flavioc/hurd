@@ -15,7 +15,12 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include "priv.h"
+#include <errno.h>
+
+#include "diskfs.h"
+#include <hurd/hurd_types.h>
+#include <hurd/ports.h>
+#include <mach.h>
 #include "fs_S.h"
 
 /* Implement file_getlinknode as described in <hurd/fs.defs>. */

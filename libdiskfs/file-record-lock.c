@@ -15,12 +15,14 @@
    You should have received a copy of the GNU General Public License
    along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "priv.h"
-#include "diskfs.h"
-#include "fs_S.h"
-
+#include <fcntl.h>
+#include <pthread.h>
 #include <errno.h>
+
+#include "diskfs.h"
+#include <mach.h>
 #include <hurd/fshelp.h>
+#include "fs_S.h"
 
 kern_return_t
 diskfs_S_file_record_lock (struct protid *cred,

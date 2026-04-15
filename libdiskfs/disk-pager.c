@@ -16,10 +16,16 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include "priv.h"
-#include "diskfs-pager.h"
-#include <hurd/sigpreempt.h>
+#include <assert-backtrace.h>
 #include <error.h>
+#include <errno.h>
+#include <stddef.h>
+
+#include "diskfs.h"
+#include <hurd/ports.h>
+#include <hurd/sigpreempt.h>
+#include <mach.h>
+#include "diskfs-pager.h"
 
 __thread struct disk_image_user *diskfs_exception_diu;
 

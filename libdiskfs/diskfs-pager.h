@@ -23,7 +23,6 @@
 #include <hurd/ports.h>
 #include <setjmp.h>
 #include <pthread.h>
-#include <errno.h>
 #include <assert-backtrace.h>
 #include <stdlib.h>
 

@@ -19,8 +19,15 @@
    the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include <string.h>
+#include <errno.h>
+#include <idvec.h>
+#include <pthread.h>
+#include <assert-backtrace.h>
+#include <sys/mman.h>
 
-#include "priv.h"
+#include "diskfs.h"
+#include <hurd/hurd_types.h>
+#include <mach.h>
 #include "fs_S.h"
 #include "fhandle.h"
 

@@ -15,11 +15,19 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include "priv.h"
-#include <hurd/paths.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <assert-backtrace.h>
+
+#include "diskfs.h"
+#include <mach.h>
+#include <hurd/hurd_types.h>
+#include <hurd/paths.h>
 #include "fs_S.h"
 
 /* Implement file_get_translator as described in <hurd/fs.defs>. */

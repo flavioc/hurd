@@ -15,8 +15,14 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include "priv.h"
-#include "fs_notify_S.h"
+#include <errno.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "diskfs.h"
+#include <mach.h>
+#include <hurd/hurd_types.h>
 #include "fs_notify_U.h"
 
 kern_return_t

@@ -15,9 +15,15 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include "priv.h"
-#include "fs_S.h"
 #include <fcntl.h>
+#include <errno.h>
+#include <pthread.h>
+#include <sys/stat.h>
+
+#include "diskfs.h"
+#include <hurd/fshelp.h>
+#include <mach.h>
+#include "fs_S.h"
 
 kern_return_t
 diskfs_S_file_check_access (struct protid *cred,

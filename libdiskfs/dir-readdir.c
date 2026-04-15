@@ -20,7 +20,13 @@
 /* Written by Michael I. Bushnell.  */
 
 #include <fcntl.h>
-#include "priv.h"
+#include <errno.h>
+#include <pthread.h>
+#include <sys/stat.h>
+
+#include <mach.h>
+#include "diskfs.h"
+#include <hurd/hurd_types.h>
 #include "fs_S.h"
 
 kern_return_t

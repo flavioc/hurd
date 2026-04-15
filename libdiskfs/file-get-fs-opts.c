@@ -22,7 +22,14 @@
 #include <errno.h>
 #include <string.h>
 #include <argz.h>
-#include "priv.h"
+#include <pthread.h>
+#include <stddef.h>
+#include <stdlib.h>
+
+#include "diskfs.h"
+#include <hurd/hurd_types.h>
+#include <hurd/iohelp.h>
+#include <mach.h>
 #include "fs_S.h"
 
 kern_return_t

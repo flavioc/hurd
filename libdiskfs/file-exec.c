@@ -20,14 +20,17 @@
 
 /* Written by Michael I. Bushnell.  */
 
-#include "priv.h"
-#include "fs_S.h"
+#include <errno.h>
+#include <pthread.h>
+#include <idvec.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#include "priv.h"
+#include "fs_S.h"
 #include <hurd/exec.h>
+#include <hurd/hurd_types.h>
 #include <hurd/paths.h>
-#include <string.h>
-#include <idvec.h>
 
 kern_return_t
 diskfs_S_file_exec (struct protid *cred,
