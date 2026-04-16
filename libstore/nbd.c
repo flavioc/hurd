@@ -116,8 +116,8 @@ nbd_write (struct store *store,
 {
   struct nbd_request req =
   {
-    magic: NBD_REQUEST_MAGIC,
-    type: htonl (1),		/* WRITE */
+    .magic = NBD_REQUEST_MAGIC,
+    .type = htonl (1),		/* WRITE */
   };
   error_t err;
   vm_size_t cc;

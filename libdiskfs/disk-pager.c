@@ -35,8 +35,8 @@ struct pager_requests *diskfs_disk_pager_requests;
 static void fault_handler (int sig, long int sigcode, struct sigcontext *scp);
 static struct hurd_signal_preemptor preemptor =
   {
-  preemptor: NULL,
-  handler: (sighandler_t) &fault_handler,
+  .preemptor = NULL,
+  .handler = (sighandler_t) &fault_handler,
   };
 
 void

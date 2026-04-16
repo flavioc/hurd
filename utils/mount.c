@@ -665,11 +665,11 @@ main (int argc, char **argv)
     {
       struct mntent m =
       {
-	mnt_fsname: device,
-	mnt_dir: mountpoint,
-	mnt_type: fstype,
-	mnt_opts: 0,
-	mnt_freq: 0, mnt_passno: 0
+	.mnt_fsname = device,
+	.mnt_dir = mountpoint,
+	.mnt_type = fstype,
+	.mnt_opts = 0,
+	.mnt_freq = 0, .mnt_passno = 0
       };
       if (firmlink)
         m.mnt_type = strdup ("firmlink");
@@ -682,13 +682,13 @@ main (int argc, char **argv)
     {
       struct mntent m =
       {
-	mnt_fsname: mountpoint, /* since we cannot know the device,
+	.mnt_fsname = mountpoint, /* since we cannot know the device,
 				   using mountpoint here leads to more
 				   helpful error messages */
-	mnt_dir: mountpoint,
-	mnt_type: fstype,
-	mnt_opts: 0,
-	mnt_freq: 0, mnt_passno: 0
+	.mnt_dir = mountpoint,
+	.mnt_type = fstype,
+	.mnt_opts = 0,
+	.mnt_freq = 0, .mnt_passno = 0
       };
       if (firmlink)
         m.mnt_type = strdup ("firmlink");

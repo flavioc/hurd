@@ -216,8 +216,8 @@ bdf_read (FILE *filep, bdf_font_t *font, int *linecount)
     unsigned int glyph_bheight;
     /* How many bitmap lines have been parsed already.  */
     unsigned int glyph_blines;
-  } parser = { location: START, properties: 0, glyphs: 0,
-	       has_size: 0, has_fbbx: 0 };
+  } parser = { .location = START, .properties = 0, .glyphs = 0,
+	       .has_size = 0, .has_fbbx = 0 };
 
   bdf = calloc (1, sizeof *bdf);
   if (!bdf)

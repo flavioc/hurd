@@ -44,8 +44,8 @@ netfs_S_fsys_getroot (struct netfs_control *pt,
   mode_t type;
   struct peropen peropen_context =
     {
-      root_parent: dotdot,
-      path: NULL,
+      .root_parent = dotdot,
+      .path = NULL,
     };
 
   if (!pt)

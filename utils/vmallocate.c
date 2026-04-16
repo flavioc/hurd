@@ -136,10 +136,10 @@ parse_opt (int key, char *arg, struct argp_state *state)
 
 const struct argp argp =
   {
-  options: options,
-  parser: parse_opt,
-  args_doc: args_doc,
-  doc: doc,
+  .options = options,
+  .parser = parse_opt,
+  .args_doc = args_doc,
+  .doc = doc,
   };
 
 

@@ -245,7 +245,7 @@ dump_core (task_t task, file_t file, off_t corelimit,
   ElfW(Phdr) *phdrs, *ph;
   ElfW(Ehdr) hdr =		/* ELF header for the core file.  */
   {
-    e_ident:
+    .e_ident =
     {
       [EI_MAG0] = ELFMAG0,
       [EI_MAG1] = ELFMAG1,
@@ -257,12 +257,12 @@ dump_core (task_t task, file_t file, off_t corelimit,
       [EI_OSABI] = ELFOSABI_SYSV,
       [EI_ABIVERSION] = 0
     },
-    e_type: ET_CORE,
-    e_version: EV_CURRENT,
-    e_machine: ELF_MACHINE,
-    e_ehsize: sizeof hdr,
-    e_phentsize: sizeof phdrs[0],
-    e_phoff: sizeof hdr,	/* Fill in e_phnum later.  */
+    .e_type = ET_CORE,
+    .e_version = EV_CURRENT,
+    .e_machine = ELF_MACHINE,
+    .e_ehsize = sizeof hdr,
+    .e_phentsize = sizeof phdrs[0],
+    .e_phoff = sizeof hdr,	/* Fill in e_phnum later.  */
   };
   off_t offset;
   size_t wrote;

@@ -1280,16 +1280,16 @@ pc_kbd_init (void **handle, int no_exit, int argc, char *argv[], int *next)
   error_t err;
   struct arguments arguments =
     {
-      pos: 1
+      .pos = 1
 #ifdef XKB_SUPPORT
-      , model: 0
-      , layout: 0
-      , variant: 0
-      , options: 0
-      , composefile: 0
-      , ctrlaltbs: 1
-      , repeat_delay: -1
-      , repeat_interval: -1
+      , .model = 0
+      , .layout = 0
+      , .variant = 0
+      , .options = 0
+      , .composefile = 0
+      , .ctrlaltbs = 1
+      , .repeat_delay = -1
+      , .repeat_interval = -1
 #endif
     };
 

@@ -147,11 +147,11 @@ static const struct argp_child argp_kids[] =
 };
 static struct argp argp =
 {
- options: argp_opts,
- parser: parse_opt,
- args_doc: args_doc,
- doc: doc,
- children: argp_kids,
+ .options = argp_opts,
+ .parser = parse_opt,
+ .args_doc = args_doc,
+ .doc = doc,
+ .children = argp_kids,
 };
 
 /* This is a trimmed and slightly modified version of
@@ -177,8 +177,8 @@ fstab_argp_mtab_parse_opt (int key, char *arg, struct argp_state *state)
 
 static struct argp fstab_argp_mtab =
 {
-  options: fstab_argp_mtab_opts,
-  parser: fstab_argp_mtab_parse_opt,
+  .options = fstab_argp_mtab_opts,
+  .parser = fstab_argp_mtab_parse_opt,
 };
 
 /* Unmount one filesystem.  */
@@ -293,12 +293,12 @@ main (int argc, char **argv)
 		/* As last resort, just assume it is the mountpoint.  */
 		struct mntent m =
 		  {
-		    mnt_fsname: "",
-		    mnt_dir: t,
-		    mnt_type: "",
-		    mnt_opts: 0,
-		    mnt_freq: 0,
-		    mnt_passno: 0,
+		    .mnt_fsname = "",
+		    .mnt_dir = t,
+		    .mnt_type = "",
+		    .mnt_opts = 0,
+		    .mnt_freq = 0,
+		    .mnt_passno = 0,
 		  };
 
 		err = fstab_add_mntent (fstab, &m, &fs);

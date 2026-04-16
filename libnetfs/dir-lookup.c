@@ -451,9 +451,9 @@ netfs_S_dir_lookup (struct protid *dircred,
   mach_port_t rendezvous = MACH_PORT_NULL;
   struct flock64 lock =
     {
-    l_start: 0,
-    l_len: 0,
-    l_whence: SEEK_SET
+    .l_start = 0,
+    .l_len = 0,
+    .l_whence = SEEK_SET
     };
 
   if (flags & O_EXLOCK)
