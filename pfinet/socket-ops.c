@@ -541,7 +541,7 @@ S_socket_recv (struct sock_user *user,
       *outflags = m.msg_flags;
       *nports = 0;
       *portstype = MACH_MSG_TYPE_COPY_SEND;
-      *controllen = m.msg_controllen;
+      *controllen -= m.msg_controllen;
     }
 
   return err;
