@@ -503,7 +503,23 @@ S_iioctl_siocdifaddr (struct sock_user *user,
 		      const ifname_t ifnam,
 		      sockaddr_t addr)
 {
-  return EOPNOTSUPP;
+  kern_return_t err;
+  struct sockaddr_in sin;
+  sin.sin_family = AF_INET;
+
+  /*
+   * To delete an address, we set it to the values we use to initialize
+   * an iface when no address is provided: 0.0.0.0/8
+   */
+  sin.sin_addr.s_addr = INADDR_ANY;
+  err = siocsifXaddr (user, ifnam, (struct sockaddr *) &sin, ADDR);
+  if (err)
+    return err;
+
+  sin.sin_addr.s_addr = htonl(IN_CLASSA_NET);
+  err = siocsifXaddr (user, ifnam, (struct sockaddr *) &sin, NETMASK);
+
+  return err;
 }
 
 /* 33 SIOCGIFADDR -- Get address of a network interface.  */
