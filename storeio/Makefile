@@ -27,3 +27,5 @@ HURDLIBS = trivfs pager fshelp iohelp store ports ihash shouldbeinlibc
 LDLIBS = -lpthread $(and $(HAVE_LIBBZ2),-lbz2) $(and $(HAVE_LIBZ),-lz)
 
 include ../Makeconf
+
+storeio.static: $(boot-store-types:%=../libstore/libstore_%.a)
