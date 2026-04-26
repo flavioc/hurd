@@ -19,11 +19,11 @@
 dir := storeio
 makemode := server
 
-target = storeio
+target = storeio storeio.static
 SRCS = dev.c storeio.c open.c pager.c io.c
 
 OBJS = $(SRCS:.c=.o)
 HURDLIBS = trivfs pager fshelp iohelp store ports ihash shouldbeinlibc
-LDLIBS = -lpthread
+LDLIBS = -lpthread $(and $(HAVE_LIBBZ2),-lbz2) $(and $(HAVE_LIBZ),-lz)
 
 include ../Makeconf
